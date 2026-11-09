@@ -765,7 +765,7 @@ async function importFiles(list){
       else failed.push(`${f.name||'File'}: this isn’t a PDF, EPUB, Word, Excel or PowerPoint file`);
     }catch(e){console.error(e);if(!ctl.cancel)failed.push(`${f.name||'File'}: ${e&&e.message||'it could not be read'}`)}
   }
-  importCtl=null;setTimeout(()=>scanShelfForFileAnnotations(),600);applyPendingImports();renderShelf();
+  importCtl=null;setTimeout(()=>scanShelfForFileAnnotations(),600);mergeDupesSoon();applyPendingImports();renderShelf();
   if(failed.length){const b=sheet(`<h2>${added?`Added ${added}, but some files failed`:'The book wasn’t added'}</h2><ul class="muted" style="padding-left:18px">${failed.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><p class="muted" style="font-size:13px">Password-protected or damaged files can’t be opened.</p><div class="mact"><button class="btn primary" data-a="ok">OK</button></div>`);b.onclick=e=>{if(e.target.closest('[data-a]'))closeSheet()}}
   else{closeSheet();if(added)toast(added===1?'Added to your shelf':`Added ${added} books to your shelf`);else if(ctl.cancel)toast('Cancelled')}
 }
@@ -785,11 +785,12 @@ async function importPdf(f,ctl){
   let hasText=true;try{hasText=await withTimeout(probeText(doc),20000,'probe')}catch(e){}
   if(ctl.cancel){try{doc.destroy()}catch(e){}return false}
   setBusy('Saving to your shelf…',.85);
+  let fp=null;try{fp=await withTimeout(pdfFingerprint(doc),30000,'fingerprint')}catch(e){}
   const k=await hashBuf(buf);const pages=doc.numPages;try{doc.destroy()}catch(e){}
-  const ex=books.find(x=>x.k===k);
-  if(ex&&!ex.cloud){toast(`“${ex.title}” is already on your shelf`);return false}
-  if(ex){await Store.putFile(ex.id,buf,'application/pdf');Object.assign(ex,{cloud:false,size:f.size,pages,hasText,cover:ex.cover||cover});await saveBook(ex);return true}
-  const b={id:uid(),k,title,author,format:'pdf',size:f.size,pages,cover,hue:hashHue(title),addedAt:Date.now(),openedAt:0,progress:0,hasText,bookmarks:[]};
+  const probe={format:'pdf',k,fp,pages,title,size:f.size};const ex=books.find(x=>sameBook(probe,x));
+  if(ex&&!ex.cloud){lastImportId=ex.id;toast(`“${ex.title}” is already on your shelf`);return false}
+  if(ex){await Store.putFile(ex.id,buf,'application/pdf');if(ex.k!==k)ex.fileKs=[...new Set([...(ex.fileKs||[]),k])];Object.assign(ex,{cloud:false,size:f.size,pages,hasText,fp:ex.fp||fp,cover:ex.cover||cover});await saveBook(ex);lastImportId=ex.id;return true}
+  const b={id:uid(),k,fp,title,author,format:'pdf',size:f.size,pages,cover,hue:hashHue(title),addedAt:Date.now(),openedAt:0,progress:0,hasText,bookmarks:[]};lastImportId=b.id;
   await Store.putFile(b.id,buf,'application/pdf');books.push(b);await saveBook(b);Sync.queueUpload(b);
   return true;
 }
@@ -803,11 +804,11 @@ async function importEpub(f,ctl){
   let cover=null;if(ep.coverItem){try{const cf=zfile(zip,ep.coverItem.path);if(cf){const bl=await cf.async('blob');cover=await withTimeout(blobToThumb(new Blob([bl],{type:mimeFor(ep.coverItem.path)})),10000,'cover')}}catch(e){}}
   const title=ep.title||cleanName(f.name||'Untitled');
   setBusy('Saving to your shelf…',.85);
-  const k=await hashBuf(buf);const ex=books.find(x=>x.k===k);
-  if(ex&&!ex.cloud){toast(`“${ex.title}” is already on your shelf`);return false}
-  if(ex){await Store.putFile(ex.id,buf,'application/epub+zip');Object.assign(ex,{cloud:false,size:f.size,cover:ex.cover||cover});await saveBook(ex);return true}
-  const b={id:uid(),k,title,author:ep.author,format:'epub',size:f.size,cover,hue:hashHue(title),addedAt:Date.now(),openedAt:0,progress:0,bookmarks:[],dir:'auto'};
-  await Store.putFile(b.id,buf,'application/epub+zip');books.push(b);await saveBook(b);Sync.queueUpload(b);
+  const k=await hashBuf(buf);const fp=epubFingerprint(title,ep.author);const ex=books.find(x=>sameBook({format:'epub',k,fp,title,author:ep.author,size:f.size},x));
+  if(ex&&!ex.cloud){lastImportId=ex.id;toast(`“${ex.title}” is already on your shelf`);return false}
+  if(ex){await Store.putFile(ex.id,buf,'application/epub+zip');if(ex.k!==k)ex.fileKs=[...new Set([...(ex.fileKs||[]),k])];Object.assign(ex,{cloud:false,size:f.size,fp:ex.fp||fp,cover:ex.cover||cover});await saveBook(ex);lastImportId=ex.id;return true}
+  const b={id:uid(),k,fp,title,author:ep.author,format:'epub',size:f.size,cover,hue:hashHue(title),addedAt:Date.now(),openedAt:0,progress:0,bookmarks:[],dir:'auto'};
+  lastImportId=b.id;await Store.putFile(b.id,buf,'application/epub+zip');books.push(b);await saveBook(b);Sync.queueUpload(b);
   return true;
 }
 
@@ -936,12 +937,12 @@ async function importOffice(f,ctl,fmt,buf){
     const wb=XLSX.read(new Uint8Array(buf),{type:'array',cellFormula:true,cellDates:true});buf=XLSX.write(wb,{bookType:'xlsx',type:'array'});fmt='xlsx'}
   if(ctl.cancel)return false;
   setBusy('Saving to your shelf…',.85);
-  const k=await hashBuf(buf);const ex=books.find(x=>x.k===k);
-  if(ex&&!ex.cloud){toast(`“${ex.title}” is already on your shelf`);return false}
-  if(ex){await Store.putFile(ex.id,buf,mimeOf(fmt));ex.cloud=false;await saveBook(ex);return true}
+  const k=await hashBuf(buf);const ex=books.find(x=>x.k===k||(x.fileKs||[]).includes(k));
+  if(ex&&!ex.cloud){lastImportId=ex.id;toast(`“${ex.title}” is already on your shelf`);return false}
+  if(ex){await Store.putFile(ex.id,buf,mimeOf(fmt));ex.cloud=false;await saveBook(ex);lastImportId=ex.id;return true}
   let title=cleanName((f.name||'Untitled').replace(/\.(docx|xlsx|xls|pptx)$/i,''));
   try{const z=await JSZip.loadAsync(buf);const c=await zipText(z,'docProps/core.xml');if(c){const m=c.match(/<dc:title>([^<]{3,})<\/dc:title>/);if(m&&!/^(slide|powerpoint|presentation|document|book)\s*\d*$/i.test(m[1].trim()))title=m[1].trim()}}catch(e){}
-  const b={id:uid(),k,title,author:'',format:fmt,size:buf.byteLength,cover:null,hue:OFFICE_HUE[fmt],addedAt:Date.now(),openedAt:0,progress:0,bookmarks:[]};
+  const b={id:uid(),k,title,author:'',format:fmt,size:buf.byteLength,cover:null,hue:OFFICE_HUE[fmt],addedAt:Date.now(),openedAt:0,progress:0,bookmarks:[]};lastImportId=b.id;
   await Store.putFile(b.id,buf,mimeOf(fmt));books.push(b);await saveBook(b);Sync.queueUpload(b);
   return true;
 }
@@ -1569,10 +1570,132 @@ document.addEventListener('keydown',e=>{if($('#present').hidden)return;if(['Arro
 document.addEventListener('fullscreenchange',()=>{if(!$('#present').hidden)setTimeout(presentFit,60)});
 
 /* ================= sync between devices ================= */
-async function hashBuf(buf){try{const h=await crypto.subtle.digest('SHA-256',buf);return [...new Uint8Array(h)].slice(0,16).map(x=>x.toString(16).padStart(2,'0')).join('')}catch(e){return 'x'+uid()}}
+async function hashBuf(buf){if(buf.byteLength>40*1048576)return sampleKey(buf);try{const h=await crypto.subtle.digest('SHA-256',buf);return [...new Uint8Array(h)].slice(0,16).map(x=>x.toString(16).padStart(2,'0')).join('')}catch(e){return sampleKey(buf)}}
 function bufToB64(buf){const u=new Uint8Array(buf);let s='';for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)}
 const MAXUP=45*1024*1024;
 function canon(v){if(Array.isArray(v))return '['+v.map(canon).join(',')+']';if(v&&typeof v==='object')return '{'+Object.keys(v).filter(k=>v[k]!==undefined).sort().map(k=>JSON.stringify(k)+':'+canon(v[k])).join(',')+'}';return JSON.stringify(v===undefined?null:v)}
+
+/* ================= one book, every device =================
+   A book is recognised on the other device by its file key (k). Very large files and copies whose bytes
+   differ (for example a PDF another app saved notes into) get a different key, so books are also matched
+   by a fingerprint of their content (fp), and doubled entries are combined into one. */
+let lastImportId=null;
+const normT=s=>String(s||'').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g,'').replace(/\.(pdf|epub)$/,'').replace(/\(\d+\)\s*$/,'').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+function fnvBytes(u){let h1=2166136261>>>0,h2=0x811c9dc5^0x5bd1e995;for(let i=0;i<u.length;i++){h1^=u[i];h1=Math.imul(h1,16777619)>>>0;h2=Math.imul(h2^u[i],2246822519)>>>0}return (h1.toString(16).padStart(8,'0')+h2.toString(16).padStart(8,'0')).repeat(2).slice(0,31)}
+async function sampleKey(buf){
+  const n=buf.byteLength,C=2*1048576,u=new Uint8Array(buf),mid=Math.floor(n/2);
+  const parts=[u.subarray(0,Math.min(C,n)),u.subarray(Math.max(0,mid-C/2),Math.min(n,mid+C/2)),u.subarray(Math.max(0,n-C))];
+  const all=new Uint8Array(parts.reduce((s,p)=>s+p.length,0)+8);let o=0;for(const p of parts){all.set(p,o);o+=p.length}new DataView(all.buffer).setFloat64(o,n);
+  try{const h=await crypto.subtle.digest('SHA-256',all);return 'z'+[...new Uint8Array(h)].slice(0,16).map(x=>x.toString(16).padStart(2,'0')).join('').slice(1)}catch(e){return 'z'+fnvBytes(all)}
+}
+async function pdfFingerprint(doc){
+  const n=doc.numPages;let txt='';const sizes=[];
+  for(const i of [...new Set([1,2,3,4,n])].filter(i=>i>=1&&i<=n)){
+    let pg;try{pg=await doc.getPage(i)}catch(e){continue}
+    const vp=pg.getViewport({scale:1});sizes.push(Math.round(vp.width)+'x'+Math.round(vp.height));
+    if(txt.length<6000){try{const tc=await pg.getTextContent();txt+=tc.items.map(x=>x.str||'').join('')}catch(e){}}
+    try{pg.cleanup()}catch(e){}
+  }
+  const t=txt.replace(/[^\p{L}\p{N}]+/gu,'').toLowerCase().slice(0,3000);
+  return t.length>=200?'pdf:'+n+':'+strHash(t):'pdfimg:'+n+':'+sizes.join(',');
+}
+const epubFingerprint=(title,author)=>'epub:'+normT(title)+'|'+normT(author);
+function sameBook(a,b){
+  if(!a||!b||a===b||a.sample||b.sample||a.format!==b.format)return false;
+  if(a.id&&b.id&&a.id===b.id)return false;
+  if(a.k&&a.k===b.k)return true;
+  if((a.fileKs||[]).includes(b.k)||(b.fileKs||[]).includes(a.k))return true;
+  if(isOffice(a))return false;
+  if(a.srcK||b.srcK)return !!(a.srcK&&a.srcK===b.srcK);
+  const ratio=(a.size&&b.size)?Math.min(a.size,b.size)/Math.max(a.size,b.size):1;
+  if(a.fp&&b.fp){if(a.fp!==b.fp)return false;return a.fp.startsWith('pdfimg:')?ratio>0.9:true}
+  const ta=normT(a.title);if(ta.length<3||ta!==normT(b.title))return false;
+  if(a.format==='pdf')return !!a.pages&&a.pages===b.pages&&ratio>0.75;
+  if(a.format==='epub')return normT(a.author)===normT(b.author);
+  return false;
+}
+const isOpenBook=b=>(R&&R.book===b)||P.book===b||O.book===b;
+/* puts everything from d into t, then removes d */
+async function mergeInto(t,d,remote){
+  if(t.cloud&&!d.cloud){const f=await Store.getFile(d.id);if(f){await Store.putFile(t.id,await f.arrayBuffer(),mimeOf(t.format));t.cloud=false;t.size=d.size||t.size}}
+  t.fileKs=[...new Set([...(t.fileKs||[]),...(d.fileKs||[]),d.k])].filter(x=>x&&x!==t.k);
+  t.fp=t.fp||d.fp;t.pages=t.pages||d.pages;t.cover=t.cover||d.cover;if(!t.assetId&&d.assetId)t.assetId=d.assetId;
+  const tomb={...(t.hlTomb||{}),...(d.hlTomb||{})},bt={...(t.bmTomb||{}),...(d.bmTomb||{})};
+  t.hlTomb=tomb;t.bmTomb=bt;t.hls=Sync.mergeById(t.hls,d.hls,tomb);t.bookmarks=Sync.mergeById(t.bookmarks,d.bookmarks,bt);
+  if((d.openedAt||0)>(t.openedAt||0)){t.pos=d.pos;t.progress=d.progress;t.stop=d.stop||null;t.openedAt=d.openedAt;t.rot=d.rot||0}
+  t.addedAt=Math.min(t.addedAt||Date.now(),d.addedAt||Date.now());
+  if(!t.convertedId&&d.convertedId&&byId(d.convertedId))t.convertedId=d.convertedId;
+  for(const x of books){let ch=false;if(x.sourceId===d.id){x.sourceId=t.id;ch=true}if(x.srcK&&x.srcK===d.k){x.srcK=t.k;ch=true}if(x.convertedId===d.id){x.convertedId=null;ch=true}if(ch&&x!==d)saveBook(x)}
+  const dk=d.k,dAsset=d.assetId;
+  await Store.delBook(d.id);books=books.filter(x=>x!==d);
+  await saveBook(t);
+  if(Sync.on&&!remote){
+    Sync.write('b-'+dk,{k:dk,deleted:true,deletedAt:Date.now(),mergedInto:t.k});Sync.write('h-'+dk,{k:dk,items:[],bm:[],tomb:{},bmTomb:{}});Sync.touch(t,1);
+    if(dAsset&&dAsset!==t.assetId&&Sync.files[dAsset])GH.serial(async()=>{try{await GH.json('DELETE','/contents/'+dAsset,{message:'Book Shelf: remove doubled copy',sha:Sync.files[dAsset],branch:Sync.branch||undefined});delete Sync.files[dAsset];Sync.persist()}catch(e){console.warn(e)}});
+  }
+}
+let mergeBusy=false,mergeT=0;
+function mergeDupesSoon(){clearTimeout(mergeT);mergeT=setTimeout(mergeDupes,2500)}
+async function mergeDupes(){
+  if(mergeBusy)return;mergeBusy=true;const names=[];
+  try{
+    for(let guard=0;guard<200;guard++){
+      const list=books.filter(b=>!b.sample&&b.k);let pair=null;
+      outer:for(let i=0;i<list.length;i++)for(let j=i+1;j<list.length;j++)if(sameBook(list[i],list[j])&&!isOpenBook(list[i])&&!isOpenBook(list[j])){pair=[list[i],list[j]];break outer}
+      if(!pair)break;
+      const [t,d]=pair[0].k<pair[1].k?pair:[pair[1],pair[0]];
+      await mergeInto(t,d,false);names.push(t.title);
+    }
+  }catch(e){console.warn('combining doubled books',e)}
+  finally{mergeBusy=false}
+  if(names.length){renderShelfSoon();toast(names.length===1?`“${names[0]}” was on your shelf twice. It’s now one book, with all its highlights and your latest place.`:`${names.length} doubled books were combined, keeping all their highlights.`)}
+}
+/* works out fingerprints for books added before this version */
+let fpBusy=false;
+async function fillFingerprints(){
+  if(fpBusy)return;fpBusy=true;let changed=false;
+  try{for(const b of [...books]){
+    if(b.sample||b.cloud||b.fp||b.fpTried||isOffice(b))continue;
+    if(b.format==='epub'){b.fp=b.srcK?null:epubFingerprint(b.title,b.author);if(b.fp){changed=true;await saveBook(b)}continue}
+    if(b.format!=='pdf'||!window.pdfjsLib)continue;
+    b.fpTried=1;let doc=null;
+    try{const f=await Store.getFile(b.id);if(!f)continue;doc=await withTimeout(loadPdf(new Uint8Array(await f.arrayBuffer())),90000,'open');b.fp=await withTimeout(pdfFingerprint(doc),30000,'fp');b.pages=b.pages||doc.numPages;changed=true}
+    catch(e){console.warn('fingerprint',b.title,e)}
+    finally{if(doc){try{doc.destroy()}catch(e){}}await Store.putBook(b);if(b.fp)Sync.touch(b)}
+    await sleep(300);
+  }}finally{fpBusy=false}
+  if(changed)mergeDupesSoon();
+}
+/* "Choose the file" for a book that lives on the other device */
+async function attachFileTo(b,file){
+  sheet(`<h2>Adding the file</h2><p class="muted stat" id="bsub">Reading the file…</p><div class="pbar"><i id="bbar" style="width:20%"></i></div>`);
+  try{
+    const kind=await sniff(file);const fmt=kind==='pdf'?'pdf':kind==='zip'?await zipKind(await file.arrayBuffer()):null;
+    if(fmt!==b.format){const s=sheet(`<h2>That’s a different kind of file</h2><p class="muted">“${esc(b.title)}” is ${esc((FMT_LABEL[b.format]||b.format).toLowerCase())}, but the file you chose is ${fmt?esc((FMT_LABEL[fmt]||fmt).toLowerCase()):'something else'}.</p><div class="mact"><button class="btn primary" data-a="x">OK</button></div>`);s.onclick=e=>{if(e.target.closest('[data-a]'))closeSheet()};return}
+    const buf=await file.arrayBuffer();setBusy('Checking it…',.5);
+    if(fmt==='pdf'){const doc=await loadPdf(new Uint8Array(buf.slice(0)));const pages=doc.numPages;let fp=null;try{fp=await withTimeout(pdfFingerprint(doc),30000,'fp')}catch(e){}try{doc.destroy()}catch(e){}
+      if(b.pages&&pages!==b.pages){const go=await confirmBox('The page count is different',`“${b.title}” has ${b.pages} pages on your other device, but this file has ${pages}. Highlights may land in the wrong places. Use this file anyway?`,'Use it');if(!go){closeSheet();return}sheet(`<h2>Adding the file</h2><p class="muted stat" id="bsub">Saving…</p><div class="pbar"><i id="bbar" style="width:80%"></i></div>`)}
+      b.fp=b.fp||fp;b.pages=b.pages||pages}
+    const k=await hashBuf(buf);if(k!==b.k)b.fileKs=[...new Set([...(b.fileKs||[]),k])];
+    await Store.putFile(b.id,buf,mimeOf(b.format));b.cloud=false;b.size=b.size||buf.byteLength;await saveBook(b);
+    closeSheet();renderShelf();toast('Done. This is now the same book on both devices.');openBook(b);
+  }catch(e){console.warn(e);const s=sheet(`<h2>The file couldn’t be added</h2><p class="muted">${esc(e&&e.message||'It could not be read.')}</p><div class="mact"><button class="btn primary" data-a="x">OK</button></div>`);s.onclick=ev=>{if(ev.target.closest('[data-a]'))closeSheet()}}
+}
+/* book menu: "Same book as…" for anything the automatic matching missed */
+function sameAsMenu(b){
+  const list=books.filter(x=>x!==b&&!x.sample&&x.format===b.format).sort((x,y)=>(sameBook(b,y)-sameBook(b,x))||String(x.title).localeCompare(String(y.title)));
+  if(!list.length){toast('There’s no other '+(FMT_LABEL[b.format]||b.format)+' on your shelf to combine it with.');return}
+  const body=sheet(`<h2>Same book as…</h2><p class="muted" style="margin:0">Pick the other copy of “${esc(b.title)}”. They become one book, with the highlights of both and your latest place, on every device.</p>
+    <div class="menu" style="max-height:52vh;overflow:auto">${list.map(x=>`<button data-sa="${x.id}"><svg class="i"><use href="#i-book"/></svg><span>${esc(x.title)}<small>${[x.pages?x.pages+' pages':'',x.size?fmtSize(x.size):'',x.cloud?'on your other device':'on this device'].filter(Boolean).join(' · ')}</small></span></button>`).join('')}</div>
+    <div class="mact"><button class="btn" data-a="x">Cancel</button></div>`);
+  body.onclick=async e=>{const s=e.target.closest('[data-sa]');if(!s){if(e.target.closest('[data-a]'))closeSheet();return}
+    const o=byId(s.dataset.sa);if(!o)return;closeSheet();if(isOpenBook(b)||isOpenBook(o))goShelf();
+    const [t,d]=String(b.k||'~')<String(o.k||'~')?[b,o]:[o,b];
+    if(!t.k||!d.k){toast('One of these books isn’t ready yet. Try again in a moment.');return}
+    await mergeInto(t,d,false);renderShelf();toast('Combined into one book');
+  };
+}
+
 const byIdSort=arr=>[...(arr||[])].sort((a,b)=>String(a.id).localeCompare(String(b.id)));
 function strHash(s){let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)>>>0}return h.toString(36)+':'+s.length}
 function utf8B64(s){return bufToB64(new TextEncoder().encode(s))}
@@ -1617,7 +1740,7 @@ const Sync={on:false,state:'off',timers:{},dirty:new Set(),upq:[],uploading:fals
           else if(e.path.startsWith('files/'))this.files[e.path]=e.sha}
         docs.sort((a,b)=>a.path.localeCompare(b.path));
         for(const e of docs){try{const bl=await GH.json('GET','/git/blobs/'+e.sha);const data=JSON.parse(b64Utf8(bl.content));this.shas[e.path]=e.sha;this.apply(e.path.slice(5,-5),data)}catch(x){console.warn(x)}}
-        this.persist()}
+        this.persist();if(docs.length)mergeDupesSoon()}
       if(!this.firstDone){this.firstDone=true;this.firstSync()}
       if(!this.uploading&&!this.dirty.size)this.setState('ok','Synced');
     }catch(e){console.warn(e);this.setState('err',navigator.onLine?'Sync paused':'Offline')}
@@ -1625,12 +1748,12 @@ const Sync={on:false,state:'off',timers:{},dirty:new Set(),upq:[],uploading:fals
   },
   async firstSync(){
     for(const b of [...books]){if(b.sample)continue;
-      if(!b.k){try{const f=await Store.getFile(b.id);if(f){b.k=await hashBuf(await f.arrayBuffer());await Store.putBook(b)}}catch(e){}}
+      if(!b.k||(b.k[0]==='x'&&!b.cloud)){try{const f=await Store.getFile(b.id);if(f){const old=b.k,nk=await hashBuf(await f.arrayBuffer());if(nk&&nk!==old){b.k=nk;if(old){b.fileKs=[...new Set([...(b.fileKs||[]),old])];this.write('b-'+old,{k:old,deleted:true,deletedAt:Date.now(),mergedInto:nk});this.write('h-'+old,{k:old,items:[],bm:[],tomb:{},bmTomb:{}})}}await Store.putBook(b)}}catch(e){}}
       if(b.k){this.touch(b,1);if(!b.cloud&&!b.assetId)this.queueUpload(b)}}
     books.forEach(b=>{if(b.sourceId&&!b.srcK){const s=byId(b.sourceId);if(s&&s.k){b.srcK=s.k;this.touch(b)}}});
   },
   metaOf(b){const src=b.sourceId&&byId(b.sourceId);
-    return{k:b.k,title:b.title||'',author:b.author||'',format:b.format,size:b.size||0,pages:b.pages||0,hasText:b.hasText!==false,hue:b.hue||0,cover:b.cover||null,
+    return{k:b.k,fp:b.fp||null,title:b.title||'',author:b.author||'',format:b.format,size:b.size||0,pages:b.pages||0,hasText:b.hasText!==false,hue:b.hue||0,cover:b.cover||null,
     assetId:b.assetId||null,srcK:b.srcK||(src&&src.k)||null,dir:b.dir||'auto',progress:b.progress||0,pos:b.pos||null,stop:b.stop||null,
     openedAt:b.openedAt||0,addedAt:b.addedAt||0,metaAt:b.metaAt||0,rot:b.rot||0,rev:b.rev||0,deleted:false}},
   hlOf(b){const items=byIdSort(b.hls);const o={k:b.k,items,bm:byIdSort(b.bookmarks),tomb:b.hlTomb||{},bmTomb:b.bmTomb||{}};
@@ -1663,10 +1786,16 @@ const Sync={on:false,state:'off',timers:{},dirty:new Set(),upq:[],uploading:fals
     if(!d)return;this.remote[docId]=d;const kind=docId.slice(0,2),k=docId.slice(2);
     let b=books.find(x=>x.k===k);
     if(kind==='b-'){
+      if(d.deleted&&d.mergedInto){this.sentH[docId]=strHash(canon(d));
+        if(b&&!b.sample&&b.k!==d.mergedInto){const t=books.find(x=>x.k===d.mergedInto);
+          if(t&&t!==b){if(isOpenBook(b))goShelf();mergeInto(t,b,true).then(()=>renderShelfSoon())}
+          else if(!t){b.fileKs=[...new Set([...(b.fileKs||[]),b.k])];b.k=d.mergedInto;saveBook(b);renderShelfSoon()}}
+        return}
       if(d.deleted){if(b&&!b.sample){if((b.addedAt||0)>(d.deletedAt||0)){delete this.sentH[docId];this.touch(b,1);return}
           if((R&&R.book===b)||P.book===b||O.book===b)goShelf();Store.delBook(b.id);books=books.filter(x=>x!==b);books.forEach(x=>{if(x.convertedId===b.id)x.convertedId=null;if(x.sourceId===b.id)x.sourceId=null});renderShelfSoon()}
         this.sentH[docId]=strHash(canon(d));return}
-      if(!b){b={id:uid(),k,cloud:true,title:d.title,author:d.author,format:d.format,size:d.size,pages:d.pages,hasText:d.hasText,hue:d.hue,cover:d.cover,assetId:d.assetId,srcK:d.srcK,dir:d.dir,
+      if(!b){const al=books.find(x=>(x.fileKs||[]).includes(k));if(al){this.sentH[docId]=strHash(canon(d));this.write(docId,{k,deleted:true,deletedAt:Date.now(),mergedInto:al.k});return}
+        b={id:uid(),k,cloud:true,fp:d.fp||null,title:d.title,author:d.author,format:d.format,size:d.size,pages:d.pages,hasText:d.hasText,hue:d.hue,cover:d.cover,assetId:d.assetId,srcK:d.srcK,dir:d.dir,
           progress:d.progress,pos:d.pos,stop:d.stop,openedAt:d.openedAt,addedAt:d.addedAt,metaAt:d.metaAt,rot:d.rot,rev:d.rev||0,bookmarks:[],hls:[]};books.push(b)}
       else{
         const open=(R&&R.book===b)||P.book===b;
@@ -1675,7 +1804,7 @@ const Sync={on:false,state:'off',timers:{},dirty:new Set(),upq:[],uploading:fals
               toast(`On your other device you’re at ${b.format==='pdf'&&dp.page?'page '+dp.page:pct+'%'}.`,{label:'Go there',fn:()=>{if(d.stop){b.stop=d.stop;if(R&&R.book===b){showEpubStop(true);return}if(P.book===b){showPdfStop(true);return}}if(R&&R.book===b)restoreAnchor(dp);else if(P.book===b&&dp.page)gotoPage(dp.page)}})}}
           else{b.pos=d.pos;b.progress=d.progress;b.openedAt=d.openedAt;b.stop=d.stop||null}}
         if((d.metaAt||0)>(b.metaAt||0)){b.title=d.title;b.author=d.author;b.hue=d.hue;b.metaAt=d.metaAt}
-        for(const f of ['assetId','cover','pages','srcK'])if(!b[f]&&d[f])b[f]=d[f];
+        for(const f of ['assetId','cover','pages','srcK','fp'])if(!b[f]&&d[f])b[f]=d[f];
         if(b.cloud&&d.assetId)b.assetId=d.assetId;
         if((d.rev||0)>(b.rev||0)&&d.assetId){b.rev=d.rev;b.assetId=d.assetId;b.size=d.size;b.cloud=true;if(O.book===b&&!O.dirty)toast('This document was changed on your other device. Go back and open it again to see the changes.')}
       }
@@ -1710,8 +1839,10 @@ const Sync={on:false,state:'off',timers:{},dirty:new Set(),upq:[],uploading:fals
   },
   async fetchBook(b){
     if(!b.assetId){
-      const s=sheet(`<h2>${esc(b.title)}</h2><p class="muted">This book is on your other device, but its file is too large to copy across. Add the same file on this device and your place and highlights will follow.</p><div class="mact"><button class="btn" data-a="x">Close</button><button class="btn primary" data-a="add">Add the file</button></div>`);
-      s.onclick=e=>{const a=e.target.closest('[data-a]');if(!a)return;if(a.dataset.a==='add')addMenu();else closeSheet()};return false}
+      const s=sheet(`<h2>${esc(b.title)}</h2><p class="muted">This book is on your other device, but its file is too large to copy across${b.size?` (${fmtSize(b.size)})`:''}. Choose the same file on this device. It becomes this book, so your place and highlights carry over, and it won’t be added twice.</p>
+        <div class="mact"><button class="btn" data-a="x">Close</button><span class="btn primary" style="position:relative;overflow:hidden">Choose the file<input type="file" id="attPick" aria-label="Choose the file" style="position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0"></span></div>`);
+      $('#attPick').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(f)attachFileTo(b,f)});
+      s.onclick=e=>{const a=e.target.closest('[data-a]');if(a)closeSheet()};return false}
     if(!GH.cfg()){toast('Set up sync on this device first (⋯ → Sync between devices).');return false}
     sheet(`<h2>Getting “${esc(b.title)}”</h2><p class="muted stat" id="bsub">Downloading from your other device…</p><div class="pbar"><i id="bbar" style="width:30%"></i></div>`);
     try{
@@ -1820,6 +1951,7 @@ function bookMenu(b){
     ${b.format==='pdf'&&!b.cloud?'<button data-m="tools"><svg class="i"><use href="#i-file"/></svg><span>PDF tools<small>Organise pages, merge, split, compress, convert…</small></span></button>':''}
     <button data-m="save"><svg class="i"><use href="#i-down"/></svg><span>Save ${b.format.toUpperCase()} file</span></button>
     <button data-m="rename"><svg class="i"><use href="#i-edit"/></svg><span>Edit title and author</span></button>
+    <button data-m="same"><svg class="i"><use href="#i-book"/></svg><span>Same book as…<small>Combine two copies of one book into one</small></span></button>
     <button data-m="del" class="del"><svg class="i"><use href="#i-trash"/></svg><span>Remove from shelf</span></button>
    </div>`);
   body.onclick=async e=>{const a=e.target.closest('[data-m]');if(!a)return;const m=a.dataset.m;
@@ -1830,6 +1962,7 @@ function bookMenu(b){
     else if(m==='save'){closeSheet();saveFile(b)}
     else if(m==='tools'){pdfToolsMenu(b)}
     else if(m==='rename')renameBook(b);
+    else if(m==='same')sameAsMenu(b);
     else if(m==='del'){closeSheet();const ok=await confirmBox('Remove this book?',`“${b.title}” will be removed from Book Shelf on your phone and your laptop, with its highlights. Your original file in Drive or on your device is not affected.`,'Remove');if(ok){Sync.removed(b);await Store.delBook(b.id);books=books.filter(x=>x.id!==b.id);books.forEach(x=>{if(x.convertedId===b.id)x.convertedId=null;if(x.sourceId===b.id)x.sourceId=null});books.forEach(saveBook);renderShelf();toast('Removed from your shelf')}}
   };
 }
@@ -3161,10 +3294,9 @@ const BS={
   }
 };
 async function openIncoming(file){
-  const before=new Set(books.map(b=>b.id));
+  lastImportId=null;
   await importFiles([file]);
-  let b=books.find(x=>!before.has(x.id));
-  if(!b){const k=await hashBuf(await file.arrayBuffer());b=books.find(x=>x.k===k)}
+  let b=lastImportId&&byId(lastImportId);
   if(b){goShelf();setTimeout(()=>openBook(b),80)}
 }
 if(window.electronAPI)window.electronAPI.onOpenFile(()=>BS.takeIncoming());
@@ -4195,7 +4327,7 @@ async function seedGuide(){
   books=await Store.allBooks();
   if(!books.length&&!LS.get('seeded',false)){try{await seedGuide();LS.set('seeded',true)}catch(e){console.warn(e)}}
   renderShelf();
-  setTimeout(()=>scanShelfForFileAnnotations(),3000);
+  setTimeout(()=>scanShelfForFileAnnotations(),3000);setTimeout(()=>{mergeDupesSoon();fillFingerprints()},9000);
   if(!Store.db)toast('This view can’t keep books after you close it. Open Book Shelf in a browser to keep your shelf.');
   Sync.start();
   BS.init().then(()=>{BS.takeIncoming();Upd.boot()});
