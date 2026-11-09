@@ -241,6 +241,15 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .textLayer .endOfContent{display:block;position:absolute;inset:100% 0 0;z-index:-1;cursor:default;user-select:none}
 .anno{position:absolute;inset:0;pointer-events:none;z-index:3}
 .cm{position:absolute;z-index:4;pointer-events:auto;width:24px;height:24px;margin:-14px 0 0 2px;border:0;border-radius:12px 12px 12px 3px;background:#3B82F6;color:#fff;font-size:12px;display:grid;place-items:center;box-shadow:0 2px 6px rgba(0,0,0,.3);cursor:pointer;padding:0}
+.asel{outline:2px dashed var(--r-accent,#2F72C9);outline-offset:2px;border-radius:3px}
+.ar.asel{outline-offset:1px}
+mark.hl.asel{outline-offset:1px}
+.kbrow{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--rule,rgba(0,0,0,.08))}
+.kbrow span{flex:1;min-width:0;font-size:14px}
+.kbrow .kb{min-width:74px;min-height:32px;padding:0 10px;border-radius:8px;border:1px solid var(--rule,rgba(0,0,0,.15));background:var(--chip,transparent);color:inherit;font:600 13px/1 ui-monospace,Consolas,monospace;cursor:pointer}
+.kbrow .kb.rec{outline:2px solid var(--accent,#2F72C9)}
+.kbrow .kx{width:30px;min-height:30px;border:0;background:none;color:inherit;opacity:.6;cursor:pointer;font-size:16px}
+.kbh{margin:14px 0 2px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;opacity:.7}
 mark.hl.hasnote::after{content:"💬";font-size:.68em;margin-inline-start:3px;vertical-align:super;cursor:pointer}
 .cbub{position:fixed;z-index:70;width:max-content;max-width:min(320px,calc(100vw - 24px));background:var(--r-bar);color:var(--r-fg);border:1px solid var(--r-rule);border-radius:14px;box-shadow:0 14px 34px -12px rgba(0,0,0,.5);padding:12px 14px;font-size:14.5px;line-height:1.45;backdrop-filter:blur(12px)}
 .cbub .ch{font-size:11px;letter-spacing:1px;text-transform:uppercase;font-weight:700;color:var(--r-accent);margin-bottom:4px}
@@ -2055,7 +2064,7 @@ $('#eScroll').addEventListener('click',e=>{
   if(a){const g=a.getAttribute('data-go');if(g){e.preventDefault();goId(g)}else if(a.getAttribute('href')==='#')e.preventDefault();return}
   if(!$('#modal').hidden&&$('#modal').classList.contains('panel')){closePanel(true);return}
   const sel=window.getSelection();if(sel&&!sel.isCollapsed)return;
-  const mk=e.target.closest('mark[data-hl]');if(mk&&R){const a=hlsOf(R.book).find(x=>x.id===mk.dataset.hl);if(a){if(a.note)showComment(R.book,a,mk,e.clientX,e.clientY);else openHlSheet(R.book,a);return}}
+  const mk=e.target.closest('mark[data-hl]');if(mk&&R){const a=hlsOf(R.book).find(x=>x.id===mk.dataset.hl);if(a){if(a.note){pickAnn(R.book,a,'comment');showComment(R.book,a,mk,e.clientX,e.clientY)}else{pickAnn(R.book,a);openHlSheet(R.book,a)}return}}
   const x=e.clientX/window.innerWidth;
   if(rs.mode==='tap'){if(x<0.3){turn(-1);return}if(x>0.7){turn(1);return}}
   $('#epub').classList.toggle('hidebars');R&&(R.lastTop=$('#eScroll').scrollTop);
@@ -2584,13 +2593,13 @@ function drawAnno(i){
   if(P.rot){L.innerHTML='';return}
   const pg=i+1,asp=P.sizes[i].h/P.sizes[i].w;let h='',svg='';
   for(const a of hlsOf(P.book)){
-    if(a.rects&&!a.failed&&!(a.src==='file'&&!a.mt))for(const r of a.rects)if(r.p===pg)h+=`<div class="ar ${a.kind}" style="left:${r.x*100}%;top:${r.y*100}%;width:${r.w*100}%;height:${r.h*100}%;${hlStyle(a.color)}"></div>`;
+    if(a.rects&&!a.failed&&!(a.src==='file'&&!a.mt))for(const r of a.rects)if(r.p===pg)h+=`<div class="ar ${a.kind}${isAsel(a)?' asel':''}" data-ah="${a.id}" style="left:${r.x*100}%;top:${r.y*100}%;width:${r.w*100}%;height:${r.h*100}%;${hlStyle(a.color)}"></div>`;
     if(a.kind==='ink'&&a.page===pg)svg+=`<path d="${inkD(a.pts,asp)}" fill="none" stroke="${a.color}" stroke-width="${a.w}" stroke-linecap="round" stroke-linejoin="round"${a.tool==='marker'?' opacity=".4"':''}/>`;
     if(isTextHl(a)&&a.note&&a.rects&&!a.failed){const rr=a.rects.filter(r=>r.p===pg);if(rr.length){const r=rr[rr.length-1];h+=`<button class="cm" data-cm="${a.id}" style="left:${Math.min(97,(r.x+r.w)*100)}%;top:${r.y*100}%" aria-label="Comment">💬</button>`}}
-    if(a.kind==='note'&&a.page===pg&&!a.quiet)h+=`<button class="an" data-an="${a.id}" style="left:${a.x*100}%;top:${a.y*100}%" aria-label="Note">✎</button>`;
+    if(a.kind==='note'&&a.page===pg&&!a.quiet)h+=`<button class="an${isAsel(a)?' asel':''}" data-an="${a.id}" style="left:${a.x*100}%;top:${a.y*100}%" aria-label="Note">✎</button>`;
     if(a.page===pg&&a.kind==='shape')svg+=shapeSvg(a,asp);
-    if(a.page===pg&&a.kind==='text')h+=`<div class="atx" data-at="${a.id}" dir="auto" style="left:${a.x*100}%;top:${a.y*100}%;color:${a.color};font-size:${(a.size*el.offsetWidth).toFixed(1)}px">${esc(a.text)}</div>`;
-    if(a.page===pg&&a.kind==='img')h+=`<img class="aim" data-ai="${a.id}" draggable="false" alt="" src="${a.src}" style="left:${a.x*100}%;top:${a.y*100}%;width:${a.w*100}%;height:${a.h*100}%">`;
+    if(a.page===pg&&a.kind==='text')h+=`<div class="atx${isAsel(a)?' asel':''}" data-at="${a.id}" dir="auto" style="left:${a.x*100}%;top:${a.y*100}%;color:${a.color};font-size:${(a.size*el.offsetWidth).toFixed(1)}px">${esc(a.text)}</div>`;
+    if(a.page===pg&&a.kind==='img')h+=`<img class="aim${isAsel(a)?' asel':''}" data-ai="${a.id}" draggable="false" alt="" src="${a.src}" style="left:${a.x*100}%;top:${a.y*100}%;width:${a.w*100}%;height:${a.h*100}%">`;
   }
   L.innerHTML=`<svg viewBox="0 0 1000 ${(1000*asp).toFixed(1)}" preserveAspectRatio="none">${svg}</svg>`+h;
 }
@@ -2644,14 +2653,14 @@ async function resolvePdfPending(i){
 function pdfTap(e){
   if(!P.doc||P.rot)return false;
   if(typeof dragEndAt!=='undefined'&&Date.now()-dragEndAt<350)return true;
-  const at=e.target.closest('[data-at]');if(at){const a=hlsOf(P.book).find(x=>x.id===at.dataset.at);if(a){editTextAnn(P.book,a);return true}}
+  const at=e.target.closest('[data-at]');if(at){const a=hlsOf(P.book).find(x=>x.id===at.dataset.at);if(a){pickAnn(P.book,a);editTextAnn(P.book,a);return true}}
   if(typeof dragEndAt!=='undefined'&&Date.now()-dragEndAt<350)return true;
-  const cmb=e.target.closest('[data-cm],[data-an]');if(cmb){const a=hlsOf(P.book).find(x=>x.id===(cmb.dataset.cm||cmb.dataset.an));if(a){showComment(P.book,a,cmb);return true}}
-  const ai=e.target.closest('[data-ai]');if(ai){const a=hlsOf(P.book).find(x=>x.id===ai.dataset.ai);if(a){imgAnnSheet(P.book,a);return true}}
+  const cmb=e.target.closest('[data-cm],[data-an]');if(cmb){const a=hlsOf(P.book).find(x=>x.id===(cmb.dataset.cm||cmb.dataset.an));if(a){pickAnn(P.book,a,'comment');showComment(P.book,a,cmb);return true}}
+  const ai=e.target.closest('[data-ai]');if(ai){const a=hlsOf(P.book).find(x=>x.id===ai.dataset.ai);if(a){pickAnn(P.book,a);imgAnnSheet(P.book,a);return true}}
   for(const i of P.visible){const el=P.els[i];const pr=el.getBoundingClientRect();if(e.clientX<pr.left||e.clientX>pr.right||e.clientY<pr.top||e.clientY>pr.bottom)continue;
     const u=(e.clientX-pr.left)/pr.width,v=(e.clientY-pr.top)/pr.height;
     const a=hlsOf(P.book).find(x=>x.rects&&!x.failed&&x.rects.some(r=>r.p===i+1&&u>=r.x-0.004&&u<=r.x+r.w+0.004&&v>=r.y-0.004&&v<=r.y+r.h+0.004));
-    if(a){if(a.note)showComment(P.book,a,null,e.clientX,e.clientY);else openHlSheet(P.book,a);return true}return false}
+    if(a){if(a.note){pickAnn(P.book,a,'comment');showComment(P.book,a,null,e.clientX,e.clientY)}else{pickAnn(P.book,a);openHlSheet(P.book,a)}return true}return false}
   return false;
 }
 
@@ -2665,7 +2674,7 @@ function setDraw(on){
 function renderDrawbar(){
   const cols=DR.tool==='marker'?Object.keys(HL):Object.keys(INK);if(!cols.includes(DR.color))DR.color=cols[0];
   $('#dcol').innerHTML=DR.tool==='sign'?`<span class="muted" style="font-size:13px;color:var(--r-muted)">Tap the page where your signature should go</span><button data-sig="1">${LS.get('sig',null)?'Change signature':'Create signature'}</button>`:DR.tool==='eraser'||DR.tool==='note'?`<span class="muted" style="font-size:13px;color:var(--r-muted)">${DR.tool==='eraser'?'Tap or drag over anything you added to remove it':'Tap the page where the comment should go'}</span>`:cols.map(c=>`<button class="dot" data-dc="${c}" aria-pressed="${c===DR.color}" aria-label="${c}" style="--c:${DR.tool==='marker'?HL[c][1]:INK[c]}"></button>`).join('');
-  $$('#drawbar [data-tool]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tool===DR.tool)));
+  $$('#drawbar [data-tool]').forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.tool===DR.tool));const k=keyFor(b.dataset.tool==='note'?'comment':'tool-'+b.dataset.tool);b.title=k?b.textContent+' ('+k+')':b.textContent});
   $$('#drawbar [data-dw]').forEach(b=>{b.setAttribute('aria-pressed',String(Number(b.dataset.dw)===DR.w));b.hidden=['eraser','note','sign'].includes(DR.tool);b.textContent=DR.tool==='text'?{2:'Small',4:'Medium',8:'Large'}[b.dataset.dw]:{2:'Thin',4:'Medium',8:'Thick'}[b.dataset.dw]});
 }
 $('#drawbar').addEventListener('click',e=>{
@@ -2719,6 +2728,7 @@ $('#pPages').addEventListener('pointerup',endStroke);$('#pPages').addEventListen
 
 /* --- shared: sheet, list, removal --- */
 function removeAnn(book,a,quiet){
+  if(ASEL&&ASEL.a.id===a.id)ASEL=null;
   const arr=hlsOf(book);const i=arr.findIndex(x=>x.id===a.id);if(i>=0)arr.splice(i,1);(book.hlTomb=book.hlTomb||{})[a.id]=Date.now();
   if(R&&R.book===book)unwrapHl(a.id);
   if(P.book===book&&P.doc){const pages=new Set();if(a.rects)a.rects.forEach(r=>pages.add(r.p));if(a.page)pages.add(a.page);pages.forEach(p=>drawAnno(p-1))}
@@ -3194,12 +3204,13 @@ function appMenu(){
     <button data-m="sync"><svg class="i"><use href="#i-rot"/></svg><span>Sync between devices<small>${Sync.on?'Connected':'Set up with a private GitHub repository'}</small></span></button>
     <button data-m="tools"><svg class="i"><use href="#i-file"/></svg><span>PDF tools<small>Merge PDFs, pictures to PDF</small></span></button>
     <button data-m="dict"><svg class="i"><use href="#i-search"/></svg><span>Dictionary<small>Works offline</small></span></button>
+    <button data-m="keys"><svg class="i"><use href="#i-pen"/></svg><span>Keyboard shortcuts<small>See and change them</small></span></button>
     <button data-m="imp"><svg class="i"><use href="#i-mark"/></svg><span>Import from Shelfmark<small>Bring in highlights, notes, bookmarks and reading places</small></span></button>
     <button data-m="about"><svg class="i"><use href="#i-book"/></svg><span>About and credits</span></button>
    </div><div class="mact"><button class="btn" data-a="x">Close</button></div>`);
   b.onclick=e=>{const a=e.target.closest('[data-m],[data-a]');if(!a)return;const m=a.dataset.m;
     if(!m){closeSheet();return}
-    if(m==='upd'){closeSheet();Upd.check(false)}else if(m==='imp'){closeSheet();importShelfmark()}else if(m==='sync')syncSheet();else if(m==='tools')shelfPdfTools();else if(m==='dict'){closeSheet();openDict();setTimeout(()=>$('#dictQ').focus(),60)}
+    if(m==='keys'){keysSheet();return}if(m==='upd'){closeSheet();Upd.check(false)}else if(m==='imp'){closeSheet();importShelfmark()}else if(m==='sync')syncSheet();else if(m==='tools')shelfPdfTools();else if(m==='dict'){closeSheet();openDict();setTimeout(()=>$('#dictQ').focus(),60)}
     else if(m==='about')sheet(`<h2>About Book Shelf</h2><p class="muted">Your personal reader for PDF, EPUB, Word, Excel and PowerPoint files.</p><p class="muted" style="font-size:13px">Dictionary: Open English WordNet 2024 (CC BY 4.0), globalwordnet.github.io. PDF rendering: PDF.js. Editing: pdf-lib, SheetJS, mammoth, docx-preview, JSZip.</p><div class="mact"><button class="btn primary" data-a="x">OK</button></div>`).onclick=ev=>{if(ev.target.closest('[data-a]'))closeSheet()}};
 }
 
@@ -3649,8 +3660,8 @@ window.addEventListener('pointermove',e=>{const d=annDrag;if(!d)return;const dx=
   if(!d.moved&&Math.hypot(e.clientX-d.sx,e.clientY-d.sy)<6)return;d.moved=true;d.t.classList.add('drag');
   d.a.x=+clamp(d.ox+dx,0,0.97).toFixed(4);d.a.y=+clamp(d.oy+dy,0,0.97).toFixed(4);d.t.style.left=d.a.x*100+'%';d.t.style.top=d.a.y*100+'%'});
 function endAnnDrag(){const d=annDrag;annDrag=null;if(!d)return;d.t.classList.remove('drag');
-  if(d.moved){dragEndAt=Date.now();d.a.mt=Date.now();saveBook(P.book);drawAnno(d.a.page-1)}
-  else{dragEndAt=Date.now();if(d.a.kind==='text')editTextAnn(P.book,d.a);else imgAnnSheet(P.book,d.a)}}
+  if(d.moved){dragEndAt=Date.now();d.a.mt=Date.now();pickAnn(P.book,d.a);saveBook(P.book);drawAnno(d.a.page-1)}
+  else{dragEndAt=Date.now();pickAnn(P.book,d.a);if(d.a.kind==='text')editTextAnn(P.book,d.a);else imgAnnSheet(P.book,d.a)}}
 window.addEventListener('pointerup',endAnnDrag);window.addEventListener('pointercancel',endAnnDrag);
 function editTextAnn(book,a){
   const sizes={0.016:'Small',0.024:'Medium',0.036:'Large'};const cols=Object.keys(INK);
@@ -3673,6 +3684,190 @@ function imgAnnSheet(book,a){
     if(c==='sm'||c==='lg'){const f=c==='sm'?0.85:1.18;a.w=+clamp(a.w*f,0.05,0.9).toFixed(4);a.h=+(a.h*(a.w/(a.w/f))).toFixed(4);a.h=+clamp(a.h,0.01,0.9).toFixed(4);a.mt=Date.now();saveBook(book);drawAnno(a.page-1);return}
     closeSheet();if(c==='del'){removeAnn(book,a);saveBook(book)}};
 }
+
+
+/* ---------- selected item, Delete key and keyboard shortcuts ---------- */
+var ASEL=null,lastDeleted=null;
+function isAsel(a){return !!(ASEL&&ASEL.a.id===a.id)}
+function aselEls(id){return $$(`[data-ah="${id}"],[data-at="${id}"],[data-ai="${id}"],[data-an="${id}"],mark[data-hl="${id}"]`)}
+function pickAnn(book,a,mode){clearAsel();ASEL={book,a,mode:mode||null};aselEls(a.id).forEach(x=>x.classList.add('asel'))}
+function clearAsel(){if(!ASEL)return;const id=ASEL.a.id;ASEL=null;aselEls(id).forEach(x=>x.classList.remove('asel'))}
+document.addEventListener('pointerdown',e=>{
+  if(!ASEL)return;const t=e.target;
+  if(t.closest&&t.closest('#modal,.cbub,.toast,#seltb,[data-at],[data-ai],[data-cm],[data-an],mark[data-hl]'))return;
+  clearAsel();
+},true);
+
+function annPages(a){const s=new Set();if(a.rects)a.rects.forEach(r=>s.add(r.p));if(a.page)s.add(a.page);return s}
+function restoreDeleted(){
+  const d=lastDeleted;lastDeleted=null;if(!d){toast('Nothing to undo');return}
+  for(const it of d.items){const {book,a,noteOnly,oldNote}=it;
+    if(noteOnly){a.note=oldNote;a.mt=Date.now();saveBook(book);syncTwin(book,a,'update');refreshAnn(book,a);continue}
+    if(book.hlTomb)delete book.hlTomb[a.id];
+    if(!hlsOf(book).some(x=>x.id===a.id))hlsOf(book).push(a);
+    if(R&&R.book===book&&a.ch!=null&&!a.pending&&!a.failed){try{wrapHl(a)}catch(x){}}
+    if(P.book===book&&P.doc)annPages(a).forEach(p=>drawAnno(p-1));
+    saveBook(book);if(isTextHl(a))syncTwin(book,a,'add');
+  }
+  toast(d.items.length>1?'Brought them back':'Brought it back');
+}
+function deleteItems(items,msg){
+  if(!items.length)return;
+  for(const it of items){if(it.noteOnly){it.a.note='';it.a.mt=Date.now();saveBook(it.book);syncTwin(it.book,it.a,'update');refreshAnn(it.book,it.a)}else removeAnn(it.book,it.a)}
+  lastDeleted={items};
+  if(drawerMode&&!$('#drawer').hidden){try{drawerMode.render('hls')}catch(x){}}
+  toast(msg,{label:'Undo',fn:restoreDeleted});
+}
+/* highlights that touch the text that is selected right now */
+function hlsInSelection(){
+  const ctx=selCtx;if(!ctx)return[];
+  if(ctx.where==='epub'&&R){const ids=new Set();$$('mark[data-hl]',$('#eText')).forEach(m=>{try{if(ctx.range.intersectsNode(m))ids.add(m.dataset.hl)}catch(x){}});
+    return hlsOf(R.book).filter(a=>ids.has(a.id))}
+  if(ctx.where==='pdf'&&P.book){
+    const rs=[...ctx.range.getClientRects()].filter(r=>r.width>1&&r.height>1);const out=[];
+    for(const a of hlsOf(P.book)){if(!a.rects||a.failed||!isTextHl(a))continue;
+      const hit=a.rects.some(r=>{const el=P.els[r.p-1];if(!el)return false;const pr=el.getBoundingClientRect();
+        const x1=pr.left+r.x*pr.width,y1=pr.top+r.y*pr.height,x2=x1+r.w*pr.width,y2=y1+r.h*pr.height;
+        return rs.some(q=>Math.min(x2,q.right)-Math.max(x1,q.left)>2&&Math.min(y2,q.bottom)-Math.max(y1,q.top)>2)});
+      if(hit)out.push(a)}
+    return out}
+  return[];
+}
+function deleteSelected(){
+  if(selCtx){
+    const list=hlsInSelection();const book=selCtx.where==='epub'?R.book:P.book;
+    if(!list.length){toast('The selected text has no highlight to delete');return true}
+    endSel();deleteItems(list.map(a=>({book,a})),list.length>1?`${list.length} highlights deleted`:'Highlight deleted');return true;
+  }
+  if(!ASEL)return false;
+  const {book,a,mode}=ASEL;
+  sheetClose=null;closeSheet();closeComment();clearAsel();
+  if(mode==='comment'&&isTextHl(a)&&a.note){deleteItems([{book,a,noteOnly:true,oldNote:a.note}],'Comment deleted (the highlight stays)');return true}
+  const what=a.kind==='note'?'Comment':a.kind==='text'?'Text':a.kind==='img'?'Signature':isTextHl(a)?'Highlight':'Item';
+  deleteItems([{book,a}],what+' deleted');return true;
+}
+
+/* shortcut list; every one can be changed from ⋯ → Keyboard shortcuts */
+const KEY_ACTIONS=[
+  {g:'Editing',id:'del',l:'Delete the selected highlight, comment, text or signature (Backspace works too)',d:'Delete'},
+  {g:'Editing',id:'undo',l:'Undo (brings back what you just deleted, or the last drawing)',d:'Ctrl+Z'},
+  {g:'Selected text',id:'hl',l:'Highlight in the last colour used',d:'H'},
+  {g:'Selected text',id:'hl-yellow',l:'Yellow highlight',d:'1'},
+  {g:'Selected text',id:'hl-green',l:'Green highlight',d:'2'},
+  {g:'Selected text',id:'hl-blue',l:'Blue highlight',d:'3'},
+  {g:'Selected text',id:'hl-pink',l:'Pink highlight',d:'4'},
+  {g:'Selected text',id:'hl-orange',l:'Orange highlight',d:'5'},
+  {g:'Selected text',id:'ul',l:'Underline',d:'U'},
+  {g:'Selected text',id:'st',l:'Strike through',d:'X'},
+  {g:'Selected text',id:'comment',l:'Comment (on selected text; with nothing selected in a PDF, the Comment tool)',d:'C'},
+  {g:'Selected text',id:'define',l:'Look up in the dictionary',d:'D'},
+  {g:'Selected text',id:'stop',l:'Mark “You stopped here”',d:''},
+  {g:'PDF tools',id:'tool-text',l:'Text',d:'T'},
+  {g:'PDF tools',id:'tool-pen',l:'Pen',d:'P'},
+  {g:'PDF tools',id:'tool-marker',l:'Marker',d:'M'},
+  {g:'PDF tools',id:'tool-rect',l:'Box',d:'B'},
+  {g:'PDF tools',id:'tool-ellipse',l:'Circle',d:'O'},
+  {g:'PDF tools',id:'tool-arrow',l:'Arrow',d:'A'},
+  {g:'PDF tools',id:'tool-line',l:'Line',d:'L'},
+  {g:'PDF tools',id:'tool-sign',l:'Signature',d:'G'},
+  {g:'PDF tools',id:'tool-eraser',l:'Eraser',d:'E'},
+  {g:'PDF tools',id:'draw',l:'Turn drawing on or off',d:'W'},
+  {g:'Reading',id:'search',l:'Search in the book',d:'F'},
+  {g:'Reading',id:'toc',l:'Contents and pages',d:'J'},
+  {g:'Reading',id:'bookmark',l:'Bookmark this place',d:'K'},
+  {g:'Reading',id:'tts',l:'Read aloud',d:'R'},
+  {g:'Reading',id:'full',l:'Full screen',d:'Shift+F'},
+];
+const KEY_FIXED=[['← →','Previous / next page'],['+ −','Bigger / smaller (zoom)'],['Esc','Close, leave drawing, or back to the shelf'],['?','Show this list']];
+let keyMap=null;
+function loadKeys(){const saved=LS.get('keys',null)||{};keyMap={};for(const k of KEY_ACTIONS)keyMap[k.id]=Object.prototype.hasOwnProperty.call(saved,k.id)?saved[k.id]:k.d}
+function saveKeys(){const o={};for(const k of KEY_ACTIONS)if(keyMap[k.id]!==k.d)o[k.id]=keyMap[k.id];LS.set('keys',o)}
+function keyFor(id){if(!keyMap)loadKeys();return keyMap[id]||''}
+function comboOf(e){
+  let k=e.key;if(!k||['Control','Shift','Alt','Meta','AltGraph','CapsLock','Dead','Unidentified'].includes(k))return'';
+  if(k===' ')k='Space';else if(k.length===1)k=k.toUpperCase();
+  const letter=/^[A-Z0-9]$/.test(k)||k.length>1;const parts=[];
+  if(e.ctrlKey||e.metaKey)parts.push('Ctrl');if(e.altKey)parts.push('Alt');if(e.shiftKey&&letter)parts.push('Shift');
+  parts.push(k);return parts.join('+');
+}
+function actionFor(combo){if(!keyMap)loadKeys();for(const k of KEY_ACTIONS)if(keyMap[k.id]&&keyMap[k.id]===combo)return k.id;return null}
+function readerRoot(){if(!$('#pdf').hidden&&P.doc)return'pdf';if(!$('#epub').hidden&&R)return'epub';return null}
+function clickAct(where,act){const b=$(`#${where} .rbar [data-act="${act}"]`);if(b){b.click();return true}return false}
+function useTool(tool){
+  if(readerRoot()!=='pdf'){toast('The drawing tools are for PDFs.');return}
+  if(!DR.on)setDraw(true);if(!DR.on)return;DR.tool=tool;renderDrawbar();
+  const b=$(`#drawbar [data-tool="${tool}"]`);toast((b?b.textContent:tool)+' tool');
+}
+function runKey(id){
+  const where=readerRoot();
+  if(id==='del')return deleteSelected();
+  if(id==='undo'){if(lastDeleted){restoreDeleted();return true}if(DR.on){$('#drawbar [data-da="undo"]').click();return true}return false}
+  if(id.startsWith('hl-')){if(!selCtx){toast('Select some text first');return true}selAction('hl',id.slice(3));return true}
+  if(id==='hl'||id==='ul'||id==='st'||id==='stop'){if(!selCtx){toast('Select some text first');return true}selAction(id);return true}
+  if(id==='define'){if(selCtx){selAction('define');return true}openDict();setTimeout(()=>{const q=$('#dictQ');if(q)q.focus()},60);return true}
+  if(id==='comment'){if(selCtx){selAction('note');return true}if(where==='pdf'){useTool('note');return true}toast('Select some text first, then press '+keyFor('comment'));return true}
+  if(id.startsWith('tool-')){useTool(id.slice(5));return true}
+  if(!where)return false;
+  if(id==='draw'){if(where==='pdf')setDraw(!DR.on);else toast('The drawing tools are for PDFs.');return true}
+  const act={search:'drawer-search',toc:'drawer-toc',bookmark:'bookmark',tts:'tts',full:'full'}[id];
+  if(act){if(!clickAct(where,act)&&act==='full')fullscreen();return true}
+  return false;
+}
+/* runs before the reader's own key handling */
+document.addEventListener('keydown',e=>{
+  if(keyRec)return;
+  const tag=(e.target.tagName||'').toLowerCase();const typing=tag==='input'||tag==='textarea'||tag==='select'||(e.target.isContentEditable);
+  if(typing||!$('#present').hidden)return;
+  const where=readerRoot();if(!where&&!$('#app').hidden&&e.key==='?'&&$('#modal').hidden){e.preventDefault();keysSheet();return}
+  if(!where||!$('#office').hidden)return;
+  const modalOpen=!$('#modal').hidden;
+  if(e.key==='Escape'&&!modalOpen){
+    if(selCtx){endSel();e.preventDefault();e.stopImmediatePropagation();return}
+    if(ASEL&&!cbubEl){clearAsel();e.preventDefault();e.stopImmediatePropagation();return}
+    if(DR.on&&!cbubEl){setDraw(false);e.preventDefault();e.stopImmediatePropagation();return}
+    return;
+  }
+  const combo=comboOf(e);if(!combo)return;
+  let id=actionFor(combo);
+  if(!id&&(combo==='Backspace'||combo==='Delete'))id='del';
+  if(!id&&combo==='?'&&!modalOpen){e.preventDefault();keysSheet();return}
+  if(!id)return;
+  if(modalOpen&&id!=='del')return;               // a window is open: only Delete reaches the selected item
+  if(modalOpen&&!ASEL)return;
+  if(runKey(id)){e.preventDefault();e.stopImmediatePropagation()}
+},true);
+
+/* ⋯ → Keyboard shortcuts */
+let keyRec=null;
+function keysSheet(){
+  if(!keyMap)loadKeys();
+  const groups=[...new Set(KEY_ACTIONS.map(k=>k.g))];
+  const render=()=>{const b=$('#mbody');if(!b||!$('#keysList'))return;
+    $('#keysList').innerHTML=groups.map(g=>`<div class="kbh">${esc(g)}</div>`+KEY_ACTIONS.filter(k=>k.g===g).map(k=>`<div class="kbrow"><span>${esc(k.l)}</span><button class="kb${keyRec===k.id?' rec':''}" data-kb="${k.id}">${keyRec===k.id?'Press a key…':esc(keyMap[k.id]||'—')}</button><button class="kx" data-kx="${k.id}" aria-label="Remove shortcut" ${keyMap[k.id]?'':'style="visibility:hidden"'}>×</button></div>`).join('')).join('')+
+      `<div class="kbh">Always on</div>`+KEY_FIXED.map(([k,l])=>`<div class="kbrow"><span>${esc(l)}</span><b class="stat" style="font:600 13px ui-monospace,Consolas,monospace;padding:0 10px">${esc(k)}</b></div>`).join('')};
+  const b=sheet(`<h2>Keyboard shortcuts</h2><p class="muted" style="margin:0 0 4px">Tap a key to change it, then press the new key (or a combination such as Ctrl+H). Press Esc to cancel. Letters work when no text box is being typed in.</p>
+    <div id="keysList"></div><div class="mact"><button class="btn" data-a="reset">Reset all</button><button class="btn primary" data-a="x">Done</button></div>`);
+  render();
+  sheetClose=()=>{keyRec=null};
+  b.onclick=e=>{
+    const kb=e.target.closest('[data-kb]');if(kb){keyRec=keyRec===kb.dataset.kb?null:kb.dataset.kb;render();return}
+    const kx=e.target.closest('[data-kx]');if(kx){keyMap[kx.dataset.kx]='';saveKeys();keyRec=null;render();return}
+    const a=e.target.closest('[data-a]');if(!a)return;
+    if(a.dataset.a==='reset'){keyRec=null;LS.set('keys',{});loadKeys();render();toast('Shortcuts are back to the original keys');return}
+    keyRec=null;closeSheet();if(DR.on)renderDrawbar();
+  };
+  keysSheet.render=render;
+}
+window.addEventListener('keydown',e=>{
+  if(!keyRec)return;e.preventDefault();e.stopImmediatePropagation();
+  if(e.key==='Escape'){keyRec=null;keysSheet.render&&keysSheet.render();return}
+  const combo=comboOf(e);if(!combo)return;
+  if(combo==='?'){toast('? is kept for opening this list');return}
+  const id=keyRec;keyRec=null;
+  const other=KEY_ACTIONS.find(k=>k.id!==id&&keyMap[k.id]===combo);
+  if(other){keyMap[other.id]='';toast(`${combo} was used for “${other.l.split(' (')[0]}”. That one now has no shortcut.`)}
+  keyMap[id]=combo;saveKeys();keysSheet.render&&keysSheet.render();
+},true);
 
 /* ================= PDF → EPUB conversion ================= */
 function openConvert(book){

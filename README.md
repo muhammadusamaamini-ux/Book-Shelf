@@ -16,6 +16,7 @@ After the first install, use **⋯ → Check for updates** inside the app. You n
 - Bookshelf, sorted by what you read last
 - EPUB reader: text size, text width, fonts, themes, continuous scroll, Urdu and Pashto support
 - PDF reader: zoom, night mode, outline, search, bookmarks
+- Keyboard shortcuts you can change (⋯ → Keyboard shortcuts), and the Delete key removes the selected highlight, comment, text or signature
 - Highlights, notes, drawings, text boxes, shapes and signatures, synced between a PDF and its EPUB version
 - "You stopped here" marker and read aloud with sentence highlighting
 - Offline English dictionary (Open English WordNet)
