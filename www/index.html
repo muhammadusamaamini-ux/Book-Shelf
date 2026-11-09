@@ -241,6 +241,12 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .textLayer .endOfContent{display:block;position:absolute;inset:100% 0 0;z-index:-1;cursor:default;user-select:none}
 .anno{position:absolute;inset:0;pointer-events:none;z-index:3}
 .cm{position:absolute;z-index:4;pointer-events:auto;width:24px;height:24px;margin:-14px 0 0 2px;border:0;border-radius:12px 12px 12px 3px;background:#3B82F6;color:#fff;font-size:12px;display:grid;place-items:center;box-shadow:0 2px 6px rgba(0,0,0,.3);cursor:pointer;padding:0}
+#appMenuBtn{position:relative}#appMenuBtn.updot::after{content:"";position:absolute;top:7px;right:7px;width:9px;height:9px;border-radius:50%;background:#D93025;box-shadow:0 0 0 2px var(--wall,#fff)}
+#updCard{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:40;width:min(560px,calc(100% - 24px));display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:14px 16px;border-radius:16px;background:var(--panel,#fff);color:var(--ink,#1f1f1f);border:1px solid var(--line,rgba(0,0,0,.1));box-shadow:0 10px 30px rgba(0,0,0,.18);animation:ucin .25s ease-out}
+#updCard .uc-t{flex:1 1 220px;min-width:0;display:flex;flex-direction:column;gap:2px}#updCard .uc-t b{font-size:15px}#updCard .uc-t span{font-size:13px;opacity:.75}
+#updCard .uc-a{display:flex;gap:6px;flex-wrap:wrap}#updCard button{min-height:36px;padding:0 12px;border-radius:10px;border:1px solid var(--line,rgba(0,0,0,.15));background:transparent;color:inherit;font:inherit;font-size:13.5px;cursor:pointer}
+#updCard .uc-go{background:var(--brass,#2E6B4A);color:var(--brass-ink,#fff);border-color:transparent;font-weight:600}
+@keyframes ucin{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}
 .asel{outline:2px dashed var(--r-accent,#2F72C9);outline-offset:2px;border-radius:3px}
 .ar.asel{outline-offset:1px}
 mark.hl.asel{outline-offset:1px}
@@ -1765,7 +1771,7 @@ function coverHtml(b){
   const pr=b.progress>0.005?`<span class="prog"><i style="width:${Math.round(b.progress*100)}%"></i></span>`:'';
   return `<div class="cover" style="--h:${b.hue||200}">${img}${fmt}${pr}</div>`;
 }
-function renderShelf(){
+function renderShelf(){try{Upd.paint()}catch(e){}
   const q=$('#q').value.trim().toLowerCase();
   let list=books.filter(b=>tab==='all'||(tab==='pdf'&&b.format==='pdf')||(tab==='epub'&&b.format==='epub')||(tab==='conv'&&!!b.sourceId)||(tab==='docs'&&isOffice(b)));
   if(q)list=list.filter(b=>(b.title+' '+(b.author||'')).toLowerCase().includes(q));
@@ -3165,42 +3171,121 @@ if(window.electronAPI)window.electronAPI.onOpenFile(()=>BS.takeIncoming());
 window.addEventListener('bookshelf-open',()=>BS.takeIncoming());
 
 /* ---------- updates ---------- */
-const Upd={latest:null,
+const Upd={latest:null,avail:null,hiddenFor:null,
   newer(a,b){const p=s=>String(s).replace(/^v/,'').split('.').map(n=>parseInt(n,10)||0);const x=p(a),y=p(b);for(let i=0;i<Math.max(x.length,y.length);i++){if((x[i]||0)!==(y[i]||0))return (x[i]||0)>(y[i]||0)}return false},
+  get set(){return Object.assign({notify:true,background:true,hours:24,skipped:''},LS.get('updSet',{}))},
+  save(o){LS.set('updSet',Object.assign(this.set,o));this.applyNative()},
+  /* asks GitHub (or the Windows updater) for the newest version; returns {ver,notes} when it is newer than this one */
+  async fetchLatest(){
+    LS.set('updChecked',Date.now());
+    if(BS.platform==='windows'){const r=await window.electronAPI.checkUpdate();return r&&r.available?{ver:r.version,notes:r.notes}:null}
+    const res=await fetch(`https://api.github.com/repos/${REPO}/releases/latest`,{headers:{Accept:'application/vnd.github+json'},cache:'no-store'});
+    if(!res.ok)throw new Error(res.status===404?'No released version was found yet':'GitHub answered '+res.status);
+    const rel=await res.json();const ver=(rel.tag_name||'').replace(/^v/,'');const apk=(rel.assets||[]).find(a=>/\.apk$/i.test(a.name));
+    if(apk&&this.newer(ver,BS.version)){this.latest={ver,url:apk.browser_download_url,size:apk.size};return{ver,notes:rel.body||'',size:apk.size}}
+    return null;
+  },
   async check(quiet){
     if(BS.platform==='web'){if(!quiet)toast('Updates work in the installed app.');return}
     try{
-      if(BS.platform==='windows'){const r=await window.electronAPI.checkUpdate();if(r&&r.available){this.offer(r.version,r.notes)}else if(!quiet)toast('You have the latest version ('+BS.version+')');LS.set('updChecked',Date.now());return}
-      const res=await fetch(`https://api.github.com/repos/${REPO}/releases/latest`,{headers:{Accept:'application/vnd.github+json'},cache:'no-store'});
-      if(!res.ok)throw new Error(res.status===404?'No released version was found yet':'GitHub answered '+res.status);
-      const rel=await res.json();const ver=(rel.tag_name||'').replace(/^v/,'');const apk=(rel.assets||[]).find(a=>/\.apk$/i.test(a.name));
-      LS.set('updChecked',Date.now());
-      if(apk&&this.newer(ver,BS.version)){this.latest={ver,url:apk.browser_download_url,size:apk.size};this.offer(ver,rel.body)}else if(!quiet)toast('You have the latest version ('+BS.version+')');
+      const r=await this.fetchLatest();
+      if(!r){this.avail=null;this.paint();if(!quiet)toast('You have the latest version ('+BS.version+')');return}
+      this.avail=r;
+      if(!quiet){this.offer(r.ver,r.notes);return}
+      if(this.set.skipped===r.ver||!this.set.notify)return;
+      this.paint();
+      if(BS.platform==='windows'&&LS.get('updNotified','')!==r.ver){LS.set('updNotified',r.ver);try{await window.electronAPI.notifyUpdate(r.ver)}catch(e){}}
     }catch(e){console.warn(e);if(!quiet)toast('Couldn’t check for updates: '+(e&&e.message||'no connection'))}
   },
+  /* the red dot on the menu button and the "New update available" card on the shelf */
+  paint(){
+    const a=this.avail,show=a&&this.set.notify&&this.set.skipped!==a.ver;
+    const btn=$('#appMenuBtn');if(btn)btn.classList.toggle('updot',!!show);
+    let card=$('#updCard');
+    if(!show||this.hiddenFor===a.ver||$('#app').hidden){if(card)card.remove();return}
+    if(!card){card=document.createElement('div');card.id='updCard';card.setAttribute('role','status');$('#app').appendChild(card)}
+    card.innerHTML=`<div class="uc-t"><b>New update available</b><span>Book Shelf ${esc(a.ver)} is ready${a.size?` · ${fmtSize(a.size)}`:''}. You have ${esc(BS.version)}.</span></div>
+      <div class="uc-a"><button data-u="later">Later</button><button data-u="new">What’s new</button><button data-u="go" class="uc-go">Download</button></div>`;
+    card.onclick=e=>{const b=e.target.closest('[data-u]');if(!b)return;const k=b.dataset.u;
+      if(k==='later'){this.hiddenFor=a.ver;card.remove()}else if(k==='new')this.offer(a.ver,a.notes);else this.install()};
+  },
   offer(ver,notes){
-    const b=sheet(`<h2>Update available</h2><p class="muted">Version <b>${esc(ver)}</b> is ready. You have ${esc(BS.version)}.</p>${notes?`<div class="note" style="max-height:30vh;overflow:auto;white-space:pre-wrap">${esc(String(notes).slice(0,1500))}</div>`:''}
-      <p class="muted" style="font-size:13px">Your books, highlights and settings are kept.</p><div class="mact"><button class="btn" data-a="later">Later</button><button class="btn primary" data-a="go">Update now</button></div>`);
-    b.onclick=e=>{const a=e.target.closest('[data-a]');if(!a)return;if(a.dataset.a==='later'){closeSheet();return}this.install()};
+    const b=sheet(`<h2>New update available</h2><p class="muted">Version <b>${esc(ver)}</b> is ready. You have ${esc(BS.version)}.</p>${notes?`<div class="note" style="max-height:30vh;overflow:auto;white-space:pre-wrap">${esc(String(notes).slice(0,1500))}</div>`:''}
+      <p class="muted" style="font-size:13px">Your books, highlights and settings are kept.</p><div class="mact"><button class="btn" data-a="skip">Skip this version</button><button class="btn" data-a="later">Later</button><button class="btn primary" data-a="go">Download and install</button></div>`);
+    b.onclick=e=>{const a=e.target.closest('[data-a]');if(!a)return;const k=a.dataset.a;
+      if(k==='later'){closeSheet();this.hiddenFor=ver;this.paint();return}
+      if(k==='skip'){closeSheet();this.save({skipped:ver});this.paint();toast(`Version ${ver} skipped. You’ll be told about the next one.`);return}
+      this.install()};
+  },
+  /* ⋯ → Updates */
+  settings(){
+    const s=this.set,native=BS.platform==='android'||BS.platform==='windows';
+    const freq=[[0,'Every time I open the app'],[24,'Once a day'],[168,'Once a week']];
+    const last=LS.get('updChecked',0);
+    const b=sheet(`<h2>Updates</h2><p class="muted stat" style="margin:0">You have version ${esc(BS.version)}. ${last?'Last checked '+new Date(last).toLocaleString():'Not checked yet'}.</p>
+      ${this.avail&&this.set.skipped!==this.avail.ver?`<div class="note"><b>Version ${esc(this.avail.ver)} is available.</b></div>`:''}
+      <div class="mact" style="justify-content:flex-start"><button class="btn primary" data-a="now">${this.avail?'Download and install':'Check now'}</button></div>
+      <label class="chk"><input type="checkbox" id="unNotify" ${s.notify?'checked':''}><span>Tell me when a new update is available</span></label>
+      <label class="f" for="unFreq">Check for updates</label>
+      <select id="unFreq">${freq.map(([h,l])=>`<option value="${h}" ${s.hours===h?'selected':''}>${l}</option>`).join('')}</select>
+      ${BS.platform==='android'?`<label class="chk"><input type="checkbox" id="unBg" ${s.background?'checked':''}><span>Show a phone notification, even when Book Shelf is closed</span></label><p class="muted" id="unPerm" style="font-size:13px;margin:0"></p>`:''}
+      ${BS.platform==='windows'?`<p class="muted" style="font-size:13px">A Windows notification also appears in the corner of the screen while Book Shelf is open.</p>`:''}
+      ${s.skipped?`<p class="muted" style="font-size:13px">Skipped version: ${esc(s.skipped)} <button class="btn" data-a="unskip" style="min-height:30px;padding:0 10px;margin-left:6px">Undo</button></p>`:''}
+      ${native?'':'<p class="muted">Updates work in the installed app.</p>'}
+      <div class="mact"><button class="btn primary" data-a="x">Done</button></div>`);
+    const perm=async()=>{const el=$('#unPerm');if(!el||!BS.native)return;try{const r=await BS.native.notifyPermission();el.innerHTML=r.granted?'':'Notifications are turned off for Book Shelf. <button class="btn" data-a="perm" style="min-height:30px;padding:0 10px;margin-left:6px">Allow</button>'}catch(e){}};
+    perm();
+    b.onchange=e=>{
+      if(e.target.id==='unNotify'){this.save({notify:e.target.checked});this.paint()}
+      else if(e.target.id==='unFreq')this.save({hours:Number(e.target.value)});
+      else if(e.target.id==='unBg'){this.save({background:e.target.checked});if(e.target.checked)this.askPermission().then(()=>setTimeout(perm,1500))}
+    };
+    b.onclick=e=>{const a=e.target.closest('[data-a]');if(!a)return;const k=a.dataset.a;
+      if(k==='now'){if(this.avail){this.install();return}closeSheet();this.check(false)}
+      else if(k==='unskip'){this.save({skipped:''});this.settings();this.paint()}
+      else if(k==='perm'){this.askPermission().then(()=>setTimeout(perm,1500))}
+      else closeSheet()};
+  },
+  async askPermission(){if(BS.platform!=='android'||!BS.native)return;try{const r=await BS.native.notifyPermission();if(!r.granted)await BS.native.requestNotifyPermission()}catch(e){console.warn(e)}},
+  async applyNative(){
+    if(BS.platform!=='android'||!BS.native)return;const s=this.set;
+    try{await BS.native.updateSettings({background:!!(s.notify&&s.background),hours:s.hours||24,skipped:s.skipped||''})}catch(e){console.warn('update schedule',e)}
+  },
+  /* the app was opened from the update notification */
+  async fromNotification(ver,go){
+    try{const r=await this.fetchLatest();if(!r){toast('You already have the latest version');return}this.avail=r;this.paint();if(go)this.install();else this.offer(r.ver,r.notes)}
+    catch(e){toast('Couldn’t reach the update: '+(e&&e.message||'no connection'))}
+  },
+  due(){const h=this.set.hours;const last=LS.get('updChecked',0);return h===0?Date.now()-last>20*60e3:Date.now()-last>h*3600e3},
+  async boot(){
+    this.applyNative();
+    if(BS.platform==='android'&&BS.native){try{const p=await BS.native.getPendingUpdate();if(p&&p.version){this.fromNotification(p.version,!!p.go);return}}catch(e){}
+      if(this.set.notify&&this.set.background){try{const r=await BS.native.notifyPermission();if(!r.granted&&r.canAsk&&!LS.get('updAsked',false)){LS.set('updAsked',true);this.askPermission()}}catch(e){}}}
+    if(this.set.notify&&this.due())setTimeout(()=>this.check(true),5000);
+    setInterval(()=>{if(this.set.notify&&this.due()&&!(this.avail&&this.avail.ver))this.check(true)},30*60e3);
   },
   async install(){
+    $('#updCard')&&$('#updCard').remove();
     const b=sheet(`<h2>Downloading the update…</h2><p class="muted stat" id="bsub">Starting…</p><div class="pbar"><i id="bbar" style="width:3%"></i></div>`);
     try{
       if(BS.platform==='windows'){window.electronAPI.onUpdateProgress(p=>setBusy(`Downloaded ${Math.round(p)}%`,p/100));await window.electronAPI.downloadUpdate();setBusy('Installing… Book Shelf will restart.',1);await window.electronAPI.installUpdate();return}
+      if(!this.latest){await this.fetchLatest();if(!this.latest){closeSheet();toast('You have the latest version');return}}
       if(!BS.native){closeSheet();toast('Opening the download in your browser. Tap the downloaded file to install the update.');window.open(this.latest.url,'_blank');return}
       const h=await BS.native.addListener('downloadProgress',p=>setBusy(p.total?`Downloaded ${fmtSize(p.loaded)} of ${fmtSize(p.total)}`:`Downloaded ${fmtSize(p.loaded)}`,p.total?p.loaded/p.total:.5));
       const r=await BS.native.installUpdate({url:this.latest.url});try{h.remove()}catch(e){}
-      if(r&&r.needsPermission){sheet(`<h2>One more step</h2><p class="muted">Android needs your permission for Book Shelf to install its own updates. In the screen that opened, turn on <b>Allow from this source</b>, come back, and tap <b>Update now</b> again.</p><div class="mact"><button class="btn primary" data-a="x">OK</button></div>`).onclick=e=>{if(e.target.closest('[data-a]'))closeSheet()};return}
+      if(r&&r.needsPermission){sheet(`<h2>One more step</h2><p class="muted">Android needs your permission for Book Shelf to install its own updates. In the screen that opened, turn on <b>Allow from this source</b>, come back, and tap <b>Download</b> again.</p><div class="mact"><button class="btn primary" data-a="x">OK</button></div>`).onclick=e=>{if(e.target.closest('[data-a]'))closeSheet()};return}
       closeSheet();
     }catch(e){console.warn(e);sheet(`<h2>The update didn’t finish</h2><p class="muted">${esc(e&&e.message||'Check your connection and try again.')}</p><div class="mact"><button class="btn primary" data-a="x">OK</button></div>`).onclick=ev=>{if(ev.target.closest('[data-a]'))closeSheet()}}
   }
 };
+if(window.electronAPI&&window.electronAPI.onUpdateClicked)window.electronAPI.onUpdateClicked(()=>{if(Upd.avail){goShelf();Upd.offer(Upd.avail.ver,Upd.avail.notes)}else Upd.check(false)});
+window.addEventListener('bookshelf-open',async()=>{if(BS.platform==='android'&&BS.native){try{const p=await BS.native.getPendingUpdate();if(p&&p.version)Upd.fromNotification(p.version,!!p.go)}catch(e){}}});
 
 /* ---------- app menu (shelf) ---------- */
 function appMenu(){
   const b=sheet(`<h2>Book Shelf</h2><p class="muted stat" style="margin:0">Version <span id="appVersion">${esc(BS.version)}</span> · ${BS.platform==='windows'?'Windows':BS.platform==='android'?'Android':'Browser'}</p>
    <div class="menu">
-    <button data-m="upd"><svg class="i"><use href="#i-down"/></svg><span>Check for updates</span></button>
+    <button data-m="upd"><svg class="i"><use href="#i-down"/></svg><span>Updates<small>${Upd.avail&&Upd.set.skipped!==Upd.avail.ver?'<b style="color:#C0392B">New version '+esc(Upd.avail.ver)+' available</b>':'Check now, notification settings'}</small></span></button>
     <button data-m="sync"><svg class="i"><use href="#i-rot"/></svg><span>Sync between devices<small>${Sync.on?'Connected':'Set up with a private GitHub repository'}</small></span></button>
     <button data-m="tools"><svg class="i"><use href="#i-file"/></svg><span>PDF tools<small>Merge PDFs, pictures to PDF</small></span></button>
     <button data-m="dict"><svg class="i"><use href="#i-search"/></svg><span>Dictionary<small>Works offline</small></span></button>
@@ -3210,7 +3295,7 @@ function appMenu(){
    </div><div class="mact"><button class="btn" data-a="x">Close</button></div>`);
   b.onclick=e=>{const a=e.target.closest('[data-m],[data-a]');if(!a)return;const m=a.dataset.m;
     if(!m){closeSheet();return}
-    if(m==='keys'){keysSheet();return}if(m==='upd'){closeSheet();Upd.check(false)}else if(m==='imp'){closeSheet();importShelfmark()}else if(m==='sync')syncSheet();else if(m==='tools')shelfPdfTools();else if(m==='dict'){closeSheet();openDict();setTimeout(()=>$('#dictQ').focus(),60)}
+    if(m==='keys'){keysSheet();return}if(m==='upd'){Upd.settings();return}else if(m==='imp'){closeSheet();importShelfmark()}else if(m==='sync')syncSheet();else if(m==='tools')shelfPdfTools();else if(m==='dict'){closeSheet();openDict();setTimeout(()=>$('#dictQ').focus(),60)}
     else if(m==='about')sheet(`<h2>About Book Shelf</h2><p class="muted">Your personal reader for PDF, EPUB, Word, Excel and PowerPoint files.</p><p class="muted" style="font-size:13px">Dictionary: Open English WordNet 2024 (CC BY 4.0), globalwordnet.github.io. PDF rendering: PDF.js. Editing: pdf-lib, SheetJS, mammoth, docx-preview, JSZip.</p><div class="mact"><button class="btn primary" data-a="x">OK</button></div>`).onclick=ev=>{if(ev.target.closest('[data-a]'))closeSheet()}};
 }
 
@@ -4113,7 +4198,7 @@ async function seedGuide(){
   setTimeout(()=>scanShelfForFileAnnotations(),3000);
   if(!Store.db)toast('This view can’t keep books after you close it. Open Book Shelf in a browser to keep your shelf.');
   Sync.start();
-  BS.init().then(()=>{BS.takeIncoming();if(Date.now()-LS.get('updChecked',0)>12*3600e3)setTimeout(()=>Upd.check(true),5000)});
+  BS.init().then(()=>{BS.takeIncoming();Upd.boot()});
   if(!window.pdfjsLib||!window.JSZip)toast('Part of the reader didn’t load. Check your connection and reload the page.');
 })();
 </script>

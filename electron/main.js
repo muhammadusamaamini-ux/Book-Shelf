@@ -1,5 +1,5 @@
 // Book Shelf for Windows (Electron)
-const { app, BrowserWindow, protocol, ipcMain, dialog, shell, net } = require('electron');
+const { app, BrowserWindow, protocol, ipcMain, dialog, shell, net, Notification } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { pathToFileURL } = require('url');
@@ -26,6 +26,7 @@ function queueFiles(list) {
   }
 }
 
+if (process.platform === 'win32') app.setAppUserModelId('com.usama.bookshelf');
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
@@ -98,3 +99,16 @@ ipcMain.handle('update-download', async () => {
   return true;
 });
 ipcMain.handle('update-install', () => { setImmediate(() => autoUpdater.quitAndInstall(false, true)); return true; });
+
+// ---- "New update available" notification in the Windows notification area
+let lastNote = null;
+ipcMain.handle('notify-update', (_e, ver) => {
+  if (!Notification.isSupported()) return false;
+  const n = new Notification({ title: 'New update available', body: `Book Shelf ${ver} is ready to download. Click to see it.`, icon: path.join(__dirname, '..', 'assets', 'icon.png') });
+  n.on('click', () => {
+    if (win) { if (win.isMinimized()) win.restore(); win.show(); win.focus(); win.webContents.send('update-clicked', ver); }
+  });
+  n.show();
+  lastNote = n; // keep a reference so the click still works later
+  return true;
+});

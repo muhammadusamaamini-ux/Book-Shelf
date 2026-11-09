@@ -4,6 +4,9 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.core.content.ContextCompat;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
@@ -31,10 +34,21 @@ public class BookShelfNative extends Plugin {
     private static String pendingName;
     private static String pendingMime;
     private byte[] pendingSave;
+    private static String pendingUpdate;
+    private static boolean pendingUpdateGo;
 
     /** Copies a file opened with "Open with" / "Share" into the app cache. Returns true if a file was taken. */
     static boolean handleIntent(Activity a, Intent i) {
         if (i == null) return false;
+        String upd = i.getStringExtra("bookshelf_update");
+        if (upd != null) {
+            pendingUpdate = upd;
+            pendingUpdateGo = i.getBooleanExtra("bookshelf_update_go", false);
+            i.removeExtra("bookshelf_update");
+            i.removeExtra("bookshelf_update_go");
+            NotificationManagerCompat.from(a).cancel(UpdateWorker.NOTE_ID);
+            return true;
+        }
         String act = i.getAction();
         Uri uri = null;
         if (Intent.ACTION_VIEW.equals(act)) uri = i.getData();
@@ -85,6 +99,46 @@ public class BookShelfNative extends Plugin {
             ret.put("version", "0.0.0");
         }
         call.resolve(ret);
+    }
+
+    /** Turns the background update check (with its notification) on or off. */
+    @PluginMethod
+    public void updateSettings(PluginCall call) {
+        boolean on = Boolean.TRUE.equals(call.getBoolean("background", true));
+        int hours = call.getInt("hours", 24);
+        String skipped = call.getString("skipped", "");
+        getContext().getSharedPreferences(UpdateWorker.PREFS, Context.MODE_PRIVATE).edit().putString("skipped", skipped).apply();
+        try { UpdateWorker.schedule(getContext(), on, hours); } catch (Exception e) { call.reject("Couldn't schedule the update check: " + e.getMessage()); return; }
+        call.resolve();
+    }
+
+    @PluginMethod
+    public void notifyPermission(PluginCall call) {
+        JSObject r = new JSObject();
+        boolean granted = Build.VERSION.SDK_INT < 33 || ContextCompat.checkSelfPermission(getContext(), "android.permission.POST_NOTIFICATIONS") == PackageManager.PERMISSION_GRANTED;
+        r.put("granted", granted && NotificationManagerCompat.from(getContext()).areNotificationsEnabled());
+        r.put("canAsk", Build.VERSION.SDK_INT >= 33 && !granted);
+        call.resolve(r);
+    }
+
+    @PluginMethod
+    public void requestNotifyPermission(PluginCall call) {
+        if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(getContext(), "android.permission.POST_NOTIFICATIONS") != PackageManager.PERMISSION_GRANTED) {
+            getActivity().requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, 4711);
+        } else if (!NotificationManagerCompat.from(getContext()).areNotificationsEnabled()) {
+            Intent s = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, getContext().getPackageName());
+            s.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            try { getContext().startActivity(s); } catch (Exception ignored) { }
+        }
+        call.resolve();
+    }
+
+    /** A tap on the update notification opened the app. */
+    @PluginMethod
+    public void getPendingUpdate(PluginCall call) {
+        JSObject r = new JSObject();
+        if (pendingUpdate != null) { r.put("version", pendingUpdate); r.put("go", pendingUpdateGo); pendingUpdate = null; pendingUpdateGo = false; }
+        call.resolve(r);
     }
 
     @PluginMethod

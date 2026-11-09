@@ -9,7 +9,7 @@ Open **[Releases](https://github.com/muhammadusamaamini-ux/book-shelf/releases/l
 - **Windows:** `Book-Shelf-Setup-<version>.exe`
 - **Android:** `Book-Shelf-<version>.apk`
 
-After the first install, use **⋯ → Check for updates** inside the app. You never need to come back here for updates.
+After the first install, the app tells you when a new version is out (a card on the shelf, and a phone or Windows notification). You can also use **⋯ → Updates** inside the app. You never need to come back here for updates.
 
 ## What it does
 

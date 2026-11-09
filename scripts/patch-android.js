@@ -11,7 +11,7 @@ const must = (cond, msg) => { if (!cond) { console.error('patch-android: ' + msg
 
 // 1. Java sources
 must(fs.existsSync(javaDir), 'Java folder not found: ' + javaDir);
-for (const f of ['MainActivity.java', 'BookShelfNative.java'])
+for (const f of ['MainActivity.java', 'BookShelfNative.java', 'UpdateWorker.java'])
   fs.copyFileSync(path.join(root, 'android-native', f), path.join(javaDir, f));
 
 // 2. Manifest: open-with and share filters, install permission
@@ -44,6 +44,8 @@ const endAct = man.indexOf('</activity>', actIdx);
 man = man.slice(0, endAct) + filters + '        ' + man.slice(endAct);
 if (!man.includes('REQUEST_INSTALL_PACKAGES'))
   man = man.replace('</manifest>', '    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\n</manifest>');
+if (!man.includes('POST_NOTIFICATIONS'))
+  man = man.replace('</manifest>', '    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n</manifest>');
 fs.writeFileSync(manPath, man);
 
 // 3. File provider paths (used to hand the downloaded update to Android's installer)
@@ -73,5 +75,8 @@ g = g.replace(/android\s*\{/, `android {
     }`);
 g = g.replace(/release\s*\{(\s*)minifyEnabled/, (m, sp) => `release {${sp}signingConfig signingConfigs.release${sp}minifyEnabled`);
 must(g.includes('signingConfig signingConfigs.release'), 'could not add signing to the release build');
+// background update check (WorkManager) for the "New update available" notification
+if (!g.includes('androidx.work:work-runtime')) g = g.replace(/dependencies\s*\{/, 'dependencies {\n    implementation "androidx.work:work-runtime:2.9.1"');
+must(g.includes('androidx.work:work-runtime'), 'could not add WorkManager');
 fs.writeFileSync(gPath, g);
 console.log(`Android project patched: version ${version} (${code})`);
