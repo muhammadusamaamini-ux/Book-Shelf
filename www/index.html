@@ -740,7 +740,7 @@ async function importFiles(list){
       else failed.push(`${f.name||'File'}: this isn’t a PDF, EPUB, Word, Excel or PowerPoint file`);
     }catch(e){console.error(e);if(!ctl.cancel)failed.push(`${f.name||'File'}: ${e&&e.message||'it could not be read'}`)}
   }
-  importCtl=null;applyPendingImports();renderShelf();
+  importCtl=null;setTimeout(()=>scanShelfForFileAnnotations(),600);applyPendingImports();renderShelf();
   if(failed.length){const b=sheet(`<h2>${added?`Added ${added}, but some files failed`:'The book wasn’t added'}</h2><ul class="muted" style="padding-left:18px">${failed.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><p class="muted" style="font-size:13px">Password-protected or damaged files can’t be opened.</p><div class="mact"><button class="btn primary" data-a="ok">OK</button></div>`);b.onclick=e=>{if(e.target.closest('[data-a]'))closeSheet()}}
   else{closeSheet();if(added)toast(added===1?'Added to your shelf':`Added ${added} books to your shelf`);else if(ctl.cancel)toast('Cancelled')}
 }
@@ -2154,6 +2154,7 @@ async function openPdf(book,opt={}){
     P.obs=new IntersectionObserver(es=>{for(const e of es){const i=Number(e.target.dataset.i);if(e.isIntersecting){P.visible.add(i);renderPage(i)}else{P.visible.delete(i);releasePage(i)}}},{root:$('#pScroll'),rootMargin:'1200px 300px'});
     P.els.forEach(el=>P.obs.observe(el));
     const start=clamp((opt.page||(book.pos&&book.pos.page)||1),1,n);
+    if(book.fileAnnScanned!==2)setTimeout(()=>importFileAnnotations(book,P.doc).then(n=>{if(n)toast(`Found ${n} highlight${n===1?'':'s'} made in another PDF app. See them under Highlights.`)}),400);
     gotoPage(start,true);if(!opt.page&&book.stop&&book.stop.p)showPdfStop(true);onPdfScroll();
     $('#pScroll').focus({preventScroll:true});
     // measure real page sizes in background (mixed page sizes)
@@ -2571,9 +2572,9 @@ function drawAnno(i){
   if(P.rot){L.innerHTML='';return}
   const pg=i+1,asp=P.sizes[i].h/P.sizes[i].w;let h='',svg='';
   for(const a of hlsOf(P.book)){
-    if(a.rects&&!a.failed)for(const r of a.rects)if(r.p===pg)h+=`<div class="ar ${a.kind}" style="left:${r.x*100}%;top:${r.y*100}%;width:${r.w*100}%;height:${r.h*100}%;${hlStyle(a.color)}"></div>`;
+    if(a.rects&&!a.failed&&!(a.src==='file'&&!a.mt))for(const r of a.rects)if(r.p===pg)h+=`<div class="ar ${a.kind}" style="left:${r.x*100}%;top:${r.y*100}%;width:${r.w*100}%;height:${r.h*100}%;${hlStyle(a.color)}"></div>`;
     if(a.kind==='ink'&&a.page===pg)svg+=`<path d="${inkD(a.pts,asp)}" fill="none" stroke="${a.color}" stroke-width="${a.w}" stroke-linecap="round" stroke-linejoin="round"${a.tool==='marker'?' opacity=".4"':''}/>`;
-    if(a.kind==='note'&&a.page===pg)h+=`<button class="an" data-an="${a.id}" style="left:${a.x*100}%;top:${a.y*100}%" aria-label="Note">✎</button>`;
+    if(a.kind==='note'&&a.page===pg&&!a.quiet)h+=`<button class="an" data-an="${a.id}" style="left:${a.x*100}%;top:${a.y*100}%" aria-label="Note">✎</button>`;
     if(a.page===pg&&a.kind==='shape')svg+=shapeSvg(a,asp);
     if(a.page===pg&&a.kind==='text')h+=`<div class="atx" data-at="${a.id}" dir="auto" style="left:${a.x*100}%;top:${a.y*100}%;color:${a.color};font-size:${(a.size*el.offsetWidth).toFixed(1)}px">${esc(a.text)}</div>`;
     if(a.page===pg&&a.kind==='img')h+=`<img class="aim" alt="" src="${a.src}" style="left:${a.x*100}%;top:${a.y*100}%;width:${a.w*100}%;height:${a.h*100}%">`;
@@ -2739,7 +2740,7 @@ function renderHlList(book,isPdf){
   const ink=hlsOf(book).filter(a=>a.kind==='ink').length;
   if(!list.length){d.innerHTML=`<p class="dempty">No highlights yet. Select some text${isPdf?' (press and hold on a word)':''} and choose a colour.${isPdf?' Use the pen button at the top to draw or add sticky notes.':''}</p>${ink?`<p class="dempty">${ink} drawing${ink>1?'s':''} on the pages.</p>`:''}`;return}
   d.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px 8px"><span class="muted stat" style="color:var(--r-muted);font-size:13px">${list.length} item${list.length>1?'s':''}${ink?` · ${ink} drawing${ink>1?'s':''}`:''}</span><button class="btn" data-hlx="1" style="min-height:32px;padding:0 12px;background:var(--r-chip);border-color:var(--r-rule);color:var(--r-fg);font-size:13px">Export</button></div>`+
-    list.map(a=>{const meta=[a.page?`Page ${a.page}`:(book.format==='epub'&&a.ch!=null?'':''),a.from?`from the ${a.from==='pdf'?'PDF':'EPUB'}`:'',a.failed?'not found in this version':'',new Date(a.at).toLocaleDateString()].filter(Boolean).join(' · ');
+    list.map(a=>{const meta=[a.page?`Page ${a.page}`:(book.format==='epub'&&a.ch!=null?'':''),a.src==='file'?'made in another PDF app':'',a.from?`from the ${a.from==='pdf'?'PDF':'EPUB'}`:'',a.failed?'not found in this version':'',new Date(a.at).toLocaleDateString()].filter(Boolean).join(' · ');
       return `<button class="hli" data-hlgo="${a.id}" style="${hlStyle(a.color||'yellow')}"><i></i><span dir="auto">${a.kind==='note'?'<b>Sticky note</b>':esc((a.text||'').slice(0,220))+((a.text||'').length>220?'…':'')}${a.note?`<em dir="auto">${esc(a.note)}</em>`:''}<small>${esc(meta)}</small></span></button>`}).join('');
 }
 function hlGo(id){
@@ -2757,7 +2758,7 @@ function exportHlText(book){
 }
 async function exportAnnotatedPdf(book){
   if(!window.PDFLib){toast('The PDF tools didn’t load. Reload the page and try again.');return}
-  const anns=hlsOf(book).filter(a=>(a.rects&&!a.failed&&!a.pending)||['ink','note','shape','text','img'].includes(a.kind));
+  const anns=hlsOf(book).filter(a=>!(a.src==='file'&&!a.mt)&&(a.rects&&!a.failed&&!a.pending)||['ink','note','shape','text','img'].includes(a.kind));
   if(!anns.length){toast('This PDF has no highlights or drawings yet.');return}
   toast('Preparing the PDF…');
   try{
@@ -3524,6 +3525,81 @@ function shapeSvg(a,asp){const X=v=>(v*1000).toFixed(1),Y=v=>(v*1000*asp).toFixe
   let out=`<line x1="${X(a.x1)}" y1="${Y(a.y1)}" x2="${X(a.x2)}" y2="${Y(a.y2)}" ${st}/>`;
   if(a.shape==='arrow'){const ex=a.x2*1000,ey=a.y2*1000*asp,ang=Math.atan2(ey-a.y1*1000*asp,ex-a.x1*1000),L=Math.max(14,a.w*4);out+=`<polyline points="${(ex+L*Math.cos(ang+2.6)).toFixed(1)},${(ey+L*Math.sin(ang+2.6)).toFixed(1)} ${ex.toFixed(1)},${ey.toFixed(1)} ${(ex+L*Math.cos(ang-2.6)).toFixed(1)},${(ey+L*Math.sin(ang-2.6)).toFixed(1)}" ${st}/>`}
   return out}
+
+/* ================= highlights saved inside the PDF by other apps (PDFgear, Acrobat…) ================= */
+const FILE_KIND={Highlight:'hl',Underline:'ul',Squiggly:'ul',StrikeOut:'st'};
+function nearestHl(color){
+  if(!color||color.length<3)return'yellow';const [r,g,b]=color;let best='yellow',bd=1e9;
+  for(const k of Object.keys(HL)){const m=HL[k][0].match(/\d+/g).map(Number);const d=(m[0]-r)**2+(m[1]-g)**2+(m[2]-b)**2;if(d<bd){bd=d;best=k}}
+  return best;
+}
+function quadsOf(a){
+  const q=a.quadPoints;if(!q)return[];
+  if(Array.isArray(q)&&q.length&&Array.isArray(q[0]))return q.map(pts=>pts.map(p=>[p.x,p.y]));
+  const flat=Array.from(q);const out=[];for(let i=0;i+7<flat.length;i+=8)out.push([[flat[i],flat[i+1]],[flat[i+2],flat[i+3]],[flat[i+4],flat[i+5]],[flat[i+6],flat[i+7]]]);return out;
+}
+function textInRects(items,vp,rects){
+  const parts=[];
+  for(const r of rects){let line='';
+    for(const it of items){if(typeof it.str!=='string'||!it.str)continue;
+      const t=pdfjsLib.Util.transform(vp.transform,it.transform);if(Math.abs(t[1])>Math.abs(t[0])*0.4+0.01)continue;
+      const fs=Math.hypot(t[2],t[3])||it.height||10,base=t[5],top=base-fs*0.85,bot=base+fs*0.2;
+      const ov=Math.min(bot,r.y+r.h)-Math.max(top,r.y);if(ov<Math.min(fs,r.h)*0.45)continue;
+      const w=Math.abs(it.width||0)*vp.scale,x0=t[4],len=it.str.length,rtl=it.dir==='rtl';let s='';
+      for(let j=0;j<len;j++){const cx=rtl?x0+w-(j+0.5)/len*w:x0+(j+0.5)/len*w;if(cx>=r.x-1&&cx<=r.x+r.w+1)s+=it.str[j]}
+      if(s)line+=(line&&!/\s$/.test(line)&&!/^\s/.test(s)?' ':'')+s}
+    if(line.trim())parts.push(line.trim())}
+  return parts.join(' ').replace(/\s+/g,' ').trim();
+}
+async function scanFileAnnotations(book,doc){
+  const found=[];
+  for(let i=1;i<=doc.numPages;i++){
+    let page,anns;try{page=await doc.getPage(i);anns=await page.getAnnotations({intent:'display'})}catch(e){continue}
+    if(!anns||!anns.length)continue;
+    const vp=page.getViewport({scale:1});let tc=null;
+    for(const a of anns){
+      const id='pdf-'+i+'-'+(a.id||found.length);const note=((a.contentsObj&&a.contentsObj.str)||a.contents||'').trim();
+      if(FILE_KIND[a.subtype]){
+        let quads=quadsOf(a);
+        if(!quads.length&&a.rect){const [x1,y1,x2,y2]=a.rect;quads=[[[x1,y2],[x2,y2],[x1,y1],[x2,y1]]]}
+        const px=quads.map(q=>{const pts=q.map(p=>vp.convertToViewportPoint(p[0],p[1]));const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);return{x:Math.min(...xs),y:Math.min(...ys),w:Math.max(...xs)-Math.min(...xs),h:Math.max(...ys)-Math.min(...ys)}}).filter(r=>r.w>0.5&&r.h>0.5);
+        if(!px.length)continue;
+        if(!tc){try{tc=await page.getTextContent()}catch(e){tc={items:[]}}}
+        const text=textInRects(tc.items,vp,px);
+        found.push({id,kind:FILE_KIND[a.subtype],color:nearestHl(a.color),text:text||note||'(highlight)',note:text?note:'',at:1,page:i,src:'file',
+          rects:px.map(r=>({p:i,x:+(r.x/vp.width).toFixed(5),y:+(r.y/vp.height).toFixed(5),w:+(r.w/vp.width).toFixed(5),h:+(r.h/vp.height).toFixed(5)}))});
+      }else if((a.subtype==='Text'||a.subtype==='FreeText')&&note&&a.rect){
+        const [x,y]=vp.convertToViewportPoint(a.rect[0],a.rect[3]);
+        found.push({id,kind:'note',page:i,x:+clamp(x/vp.width,0,1).toFixed(4),y:+clamp(y/vp.height,0,1).toFixed(4),note,at:1,src:'file',quiet:a.subtype==='FreeText'});
+      }
+    }
+    try{page.cleanup()}catch(e){}
+    if(i%20===0)await sleep(0);
+  }
+  return found;
+}
+async function importFileAnnotations(book,doc){
+  if(!book||book.format!=='pdf')return 0;
+  let own=false;
+  try{
+    if(!doc){const f=await Store.getFile(book.id);if(!f)return 0;doc=await loadPdf(new Uint8Array(await f.arrayBuffer()));own=true}
+    const found=await scanFileAnnotations(book,doc);
+    const arr=hlsOf(book),tomb=book.hlTomb||{};let added=0;
+    for(const a of found){if(tomb[a.id]||arr.some(x=>x.id===a.id))continue;arr.push(a);added++;if(isTextHl(a))syncTwin(book,a,'add')}
+    book.fileAnnScanned=2;await saveBook(book);
+    if(added&&P.book===book&&P.doc)P.visible.forEach(i=>drawAnno(i));
+    return added;
+  }catch(e){console.warn('reading PDF highlights failed',e);return 0}
+  finally{if(own){try{doc.destroy()}catch(e){}}}
+}
+let fileAnnBusy=false;
+async function scanShelfForFileAnnotations(){
+  if(fileAnnBusy)return;fileAnnBusy=true;let total=0,booksWith=0;
+  try{for(const b of [...books]){if(b.format!=='pdf'||b.cloud||b.fileAnnScanned===2||b.sample)continue;const n=await importFileAnnotations(b,null);if(n){total+=n;booksWith++}await sleep(50)}}
+  finally{fileAnnBusy=false}
+  if(total)toast(`Found ${total} highlight${total===1?'':'s'} made in other PDF apps (${booksWith} book${booksWith===1?'':'s'}). They’re in each book’s Highlights list.`);
+}
+
 /* ================= PDF → EPUB conversion ================= */
 function openConvert(book){
   const b=sheet(`<h2>Convert to EPUB</h2>
@@ -3556,7 +3632,8 @@ async function runConvert(book,opts){
     const nb={id:uid(),k:await hashBuf(ebuf),srcK:book.k||null,title:opts.title,author:opts.author,format:'epub',size:res.blob.size,cover:book.cover,hue:book.hue||hashHue(opts.title),addedAt:Date.now(),openedAt:0,progress:0,bookmarks:[],dir:'auto',sourceId:book.id};
     await Store.putFile(nb.id,ebuf,'application/epub+zip');books.push(nb);await saveBook(nb);Sync.queueUpload(nb);
     if(old){Sync.removed(old);await Store.delBook(old.id);books=books.filter(x=>x.id!==old.id)}
-    book.convertedId=nb.id;await saveBook(book);applyPendingImports();
+    book.convertedId=nb.id;await saveBook(book);
+    nb.hls=hlsOf(book).filter(isTextHl).filter(a=>a.text&&a.text!=='(highlight)').map(a=>({id:a.id,kind:a.kind,color:a.color,text:a.text,note:a.note||'',at:a.at,page:a.page||null,pending:true,from:'pdf'}));if(nb.hls.length)await saveBook(nb);applyPendingImports();
     if($('#app').hidden===false)renderShelf();
     sheetClose=null;
     const s=res.stats;
@@ -3764,6 +3841,7 @@ async function seedGuide(){
   books=await Store.allBooks();
   if(!books.length&&!LS.get('seeded',false)){try{await seedGuide();LS.set('seeded',true)}catch(e){console.warn(e)}}
   renderShelf();
+  setTimeout(()=>scanShelfForFileAnnotations(),3000);
   if(!Store.db)toast('This view can’t keep books after you close it. Open Book Shelf in a browser to keep your shelf.');
   Sync.start();
   BS.init().then(()=>{BS.takeIncoming();if(Date.now()-LS.get('updChecked',0)>12*3600e3)setTimeout(()=>Upd.check(true),5000)});
