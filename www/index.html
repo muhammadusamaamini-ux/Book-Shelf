@@ -740,7 +740,7 @@ async function importFiles(list){
       else failed.push(`${f.name||'File'}: this isn’t a PDF, EPUB, Word, Excel or PowerPoint file`);
     }catch(e){console.error(e);if(!ctl.cancel)failed.push(`${f.name||'File'}: ${e&&e.message||'it could not be read'}`)}
   }
-  importCtl=null;renderShelf();
+  importCtl=null;applyPendingImports();renderShelf();
   if(failed.length){const b=sheet(`<h2>${added?`Added ${added}, but some files failed`:'The book wasn’t added'}</h2><ul class="muted" style="padding-left:18px">${failed.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><p class="muted" style="font-size:13px">Password-protected or damaged files can’t be opened.</p><div class="mact"><button class="btn primary" data-a="ok">OK</button></div>`);b.onclick=e=>{if(e.target.closest('[data-a]'))closeSheet()}}
   else{closeSheet();if(added)toast(added===1?'Added to your shelf':`Added ${added} books to your shelf`);else if(ctl.cancel)toast('Cancelled')}
 }
@@ -3177,12 +3177,48 @@ function appMenu(){
     <button data-m="sync"><svg class="i"><use href="#i-rot"/></svg><span>Sync between devices<small>${Sync.on?'Connected':'Set up with a private GitHub repository'}</small></span></button>
     <button data-m="tools"><svg class="i"><use href="#i-file"/></svg><span>PDF tools<small>Merge PDFs, pictures to PDF</small></span></button>
     <button data-m="dict"><svg class="i"><use href="#i-search"/></svg><span>Dictionary<small>Works offline</small></span></button>
+    <button data-m="imp"><svg class="i"><use href="#i-mark"/></svg><span>Import from Shelfmark<small>Bring in highlights, notes, bookmarks and reading places</small></span></button>
     <button data-m="about"><svg class="i"><use href="#i-book"/></svg><span>About and credits</span></button>
    </div><div class="mact"><button class="btn" data-a="x">Close</button></div>`);
   b.onclick=e=>{const a=e.target.closest('[data-m],[data-a]');if(!a)return;const m=a.dataset.m;
     if(!m){closeSheet();return}
-    if(m==='upd'){closeSheet();Upd.check(false)}else if(m==='sync')syncSheet();else if(m==='tools')shelfPdfTools();else if(m==='dict'){closeSheet();openDict();setTimeout(()=>$('#dictQ').focus(),60)}
+    if(m==='upd'){closeSheet();Upd.check(false)}else if(m==='imp'){closeSheet();importShelfmark()}else if(m==='sync')syncSheet();else if(m==='tools')shelfPdfTools();else if(m==='dict'){closeSheet();openDict();setTimeout(()=>$('#dictQ').focus(),60)}
     else if(m==='about')sheet(`<h2>About Book Shelf</h2><p class="muted">Your personal reader for PDF, EPUB, Word, Excel and PowerPoint files.</p><p class="muted" style="font-size:13px">Dictionary: Open English WordNet 2024 (CC BY 4.0), globalwordnet.github.io. PDF rendering: PDF.js. Editing: pdf-lib, SheetJS, mammoth, docx-preview, JSZip.</p><div class="mact"><button class="btn primary" data-a="x">OK</button></div>`).onclick=ev=>{if(ev.target.closest('[data-a]'))closeSheet()}};
+}
+
+/* ---------- import from Shelfmark (the version inside Claude) ---------- */
+function matchImported(it){
+  let b=it.k&&books.find(x=>x.k===it.k&&!x.sample);
+  if(!b&&it.format==='epub'&&it.srcK)b=books.find(x=>x.format==='epub'&&(x.srcK===it.srcK||(x.sourceId&&byId(x.sourceId)&&byId(x.sourceId).k===it.srcK)));
+  return b||null;
+}
+function applyImported(b,it){
+  b.hlTomb={...(b.hlTomb||{}),...(it.hlTomb||{})};b.bmTomb={...(b.bmTomb||{}),...(it.bmTomb||{})};
+  b.hls=Sync.mergeById(b.hls,(it.hls||[]).map(h=>it.format==='epub'&&b.k!==it.k&&h.ch==null?{...h,pending:true}:h),b.hlTomb);
+  b.bookmarks=Sync.mergeById(b.bookmarks,it.bookmarks||[],b.bmTomb);
+  if((it.openedAt||0)>(b.openedAt||0)){b.pos=it.pos;b.progress=it.progress;b.stop=it.stop;b.openedAt=it.openedAt}
+  if(it.dir&&(!b.dir||b.dir==='auto'))b.dir=it.dir;
+  saveBook(b);
+}
+function applyPendingImports(quiet){
+  const pend=LS.get('pendingImport',[]);if(!pend.length)return 0;const left=[];let done=0;
+  for(const it of pend){const b=matchImported(it);if(b){applyImported(b,it);done++}else left.push(it)}
+  LS.set('pendingImport',left);if(done&&!quiet)toast(`Highlights added to ${done} book${done===1?'':'s'} from Shelfmark`);return done;
+}
+function importShelfmark(){
+  const inp=document.createElement('input');inp.type='file';inp.accept='.json,application/json';
+  inp.onchange=async()=>{const f=inp.files[0];if(!f)return;
+    let data;try{data=JSON.parse(await f.text())}catch(e){toast('That file couldn’t be read. Choose the “Shelfmark highlights.json” file.');return}
+    if(!data||data.app!=='shelfmark'||!Array.isArray(data.books)){toast('That isn’t a Shelfmark export file.');return}
+    const items=data.books.filter(it=>(it.hls&&it.hls.length)||(it.bookmarks&&it.bookmarks.length)||it.pos);
+    const pend=LS.get('pendingImport',[]).filter(p=>!items.some(it=>it.k&&it.k===p.k));LS.set('pendingImport',[...pend,...items]);
+    const done=applyPendingImports(true);const waiting=LS.get('pendingImport',[]);
+    const nh=items.reduce((a,it)=>a+(it.hls||[]).filter(h=>h.kind!=='ink').length,0);renderShelf();
+    const b=sheet(`<h2>Imported from Shelfmark</h2><p class="muted">${nh} highlights and notes from ${items.length} book${items.length===1?'':'s'}. ${done} book${done===1?' was':'s were'} matched with books on this shelf.</p>
+      ${waiting.length?`<div class="note"><b>Waiting for these books:</b><ul style="margin:6px 0 0;padding-left:18px">${waiting.map(w=>`<li dir="auto">${esc(w.title||'Untitled')}${w.format==='epub'&&w.srcK?' (convert its PDF to EPUB here)':''}</li>`).join('')}</ul><p style="margin:8px 0 0">Add the same file here (for EPUBs made from a PDF, add the PDF and convert it). The highlights will appear by themselves.</p></div>`:''}
+      <div class="mact"><button class="btn primary" data-a="x">OK</button></div>`);
+    b.onclick=e=>{if(e.target.closest('[data-a]'))closeSheet()};
+  };inp.click();
 }
 
 /* ---------- offline dictionary ---------- */
@@ -3520,7 +3556,7 @@ async function runConvert(book,opts){
     const nb={id:uid(),k:await hashBuf(ebuf),srcK:book.k||null,title:opts.title,author:opts.author,format:'epub',size:res.blob.size,cover:book.cover,hue:book.hue||hashHue(opts.title),addedAt:Date.now(),openedAt:0,progress:0,bookmarks:[],dir:'auto',sourceId:book.id};
     await Store.putFile(nb.id,ebuf,'application/epub+zip');books.push(nb);await saveBook(nb);Sync.queueUpload(nb);
     if(old){Sync.removed(old);await Store.delBook(old.id);books=books.filter(x=>x.id!==old.id)}
-    book.convertedId=nb.id;await saveBook(book);
+    book.convertedId=nb.id;await saveBook(book);applyPendingImports();
     if($('#app').hidden===false)renderShelf();
     sheetClose=null;
     const s=res.stats;
