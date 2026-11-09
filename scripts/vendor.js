@@ -13,6 +13,8 @@ function copyFirst(dest, candidates) {
   fs.copyFileSync(hit, path.join(lib, dest));
   console.log('lib/' + dest + '  <-  ' + path.relative(root, hit));
 }
+// Capacitor's own script, so the Android app can reach its native parts (optional elsewhere)
+{ const f = ['@capacitor/core/dist/capacitor.js'].map(nm).find(x => fs.existsSync(x)); if (f) { fs.copyFileSync(f, path.join(lib, 'capacitor.js')); console.log('lib/capacitor.js'); } else { fs.writeFileSync(path.join(lib, 'capacitor.js'), ''); console.warn('capacitor.js not found; using the built-in bridge'); } }
 copyFirst('pdf.min.js', ['pdfjs-dist/build/pdf.min.js', 'pdfjs-dist/build/pdf.js']);
 copyFirst('pdf.worker.min.js', ['pdfjs-dist/build/pdf.worker.min.js', 'pdfjs-dist/build/pdf.worker.js']);
 copyFirst('jszip.min.js', ['jszip/dist/jszip.min.js']);

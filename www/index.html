@@ -594,6 +594,7 @@ body.tts-open .pages{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 340px
 </div>
 <div class="drop" id="drop" hidden>Drop PDF or EPUB files to add them</div>
 
+<script src="lib/capacitor.js"></script>
 <script src="lib/pdf.min.js"></script>
 <script src="lib/jszip.min.js"></script>
 <script src="lib/pdf-lib.min.js"></script>
@@ -3090,12 +3091,23 @@ function showPdfStop(scroll){
 
 /* ================= Book Shelf: platform layer (Windows app / Android app) ================= */
 const REPO='muhammadusamaamini-ux/book-shelf';
+/* connects to a native Android plugin, with or without the Capacitor core script */
+function capPlugin(name){
+  const C=window.Capacitor;if(!C)return null;
+  if(typeof C.registerPlugin==='function'){try{return C.registerPlugin(name)}catch(e){}}
+  if(C.Plugins&&C.Plugins[name])return C.Plugins[name];
+  if(typeof C.nativePromise==='function')return new Proxy({},{get:(_,m)=>{
+    if(m==='then')return undefined;
+    if(m==='addListener')return (ev,cb)=>{let id=null;try{id=C.nativeCallback(name,'addListener',{eventName:ev},cb)}catch(e){}return Promise.resolve({remove:()=>{try{C.nativePromise(name,'removeListener',{callbackId:id,eventName:ev}).catch(()=>{})}catch(e){}}})};
+    return opts=>C.nativePromise(name,m,opts||{})}});
+  return null;
+}
 const BS={
   platform:window.electronAPI?'windows':(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()?'android':'web'),
   version:'0.0.0',
   native:null,
   async init(){
-    if(this.platform==='android'){try{this.native=window.Capacitor.registerPlugin('BookShelfNative');const i=await this.native.getInfo();this.version=i.version||this.version}catch(e){console.warn(e)}}
+    if(this.platform==='android'){try{this.native=capPlugin('BookShelfNative');const i=await this.native.getInfo();this.version=i.version||this.version}catch(e){console.warn(e)}}
     else if(this.platform==='windows'){try{this.version=await window.electronAPI.version()}catch(e){}}
     const v=$('#appVersion');if(v)v.textContent=this.version;
   },
@@ -3148,6 +3160,7 @@ const Upd={latest:null,
     const b=sheet(`<h2>Downloading the update…</h2><p class="muted stat" id="bsub">Starting…</p><div class="pbar"><i id="bbar" style="width:3%"></i></div>`);
     try{
       if(BS.platform==='windows'){window.electronAPI.onUpdateProgress(p=>setBusy(`Downloaded ${Math.round(p)}%`,p/100));await window.electronAPI.downloadUpdate();setBusy('Installing… Book Shelf will restart.',1);await window.electronAPI.installUpdate();return}
+      if(!BS.native){closeSheet();toast('Opening the download in your browser. Tap the downloaded file to install the update.');window.open(this.latest.url,'_blank');return}
       const h=await BS.native.addListener('downloadProgress',p=>setBusy(p.total?`Downloaded ${fmtSize(p.loaded)} of ${fmtSize(p.total)}`:`Downloaded ${fmtSize(p.loaded)}`,p.total?p.loaded/p.total:.5));
       const r=await BS.native.installUpdate({url:this.latest.url});try{h.remove()}catch(e){}
       if(r&&r.needsPermission){sheet(`<h2>One more step</h2><p class="muted">Android needs your permission for Book Shelf to install its own updates. In the screen that opened, turn on <b>Allow from this source</b>, come back, and tap <b>Update now</b> again.</p><div class="mact"><button class="btn primary" data-a="x">OK</button></div>`).onclick=e=>{if(e.target.closest('[data-a]'))closeSheet()};return}
@@ -3198,7 +3211,7 @@ async function dictSuggest(w){const sh=await dictShard(w[0]);const pre=w.slice(0
 /* ---------- Android: read aloud through the phone's own text-to-speech ---------- */
 (function(){
   if(BS.platform!=='android'||(window.speechSynthesis&&window.SpeechSynthesisUtterance))return;
-  let tts=null;try{tts=window.Capacitor.registerPlugin('TextToSpeech')}catch(e){}
+  let tts=null;try{tts=capPlugin('TextToSpeech')}catch(e){}
   if(!tts)return;
   let voices=[];tts.getSupportedVoices().then(r=>{voices=(r&&r.voices)||[]}).catch(()=>{});
   window.SpeechSynthesisUtterance=function(text){this.text=text;this.rate=1;this.lang='';this.voice=null;this.onend=null;this.onerror=null};
