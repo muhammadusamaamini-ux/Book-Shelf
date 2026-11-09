@@ -1,0 +1,66 @@
+{
+  "name": "book-shelf",
+  "productName": "Book Shelf",
+  "version": "1.0.0",
+  "description": "Personal reader for PDF, EPUB, Word, Excel and PowerPoint files",
+  "author": "Muhammad Usama Amini",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "electron/main.js",
+  "scripts": {
+    "vendor": "node scripts/vendor.js",
+    "start": "npm run vendor && electron .",
+    "build:win": "npm run vendor && electron-builder --win --publish never"
+  },
+  "dependencies": {
+    "electron-updater": "6.1.7"
+  },
+  "devDependencies": {
+    "@capacitor-community/text-to-speech": "^4.1.0",
+    "@capacitor/android": "6.1.2",
+    "@capacitor/assets": "3.0.5",
+    "@capacitor/cli": "6.1.2",
+    "@capacitor/core": "6.1.2",
+    "@fontsource/atkinson-hyperlegible": "^5.0.0",
+    "@fontsource/figtree": "^5.0.0",
+    "@fontsource/literata": "^5.0.0",
+    "@fontsource/noto-naskh-arabic": "^5.0.0",
+    "@fontsource/noto-nastaliq-urdu": "^5.0.0",
+    "@fontsource/source-serif-4": "^5.0.0",
+    "@fontsource/young-serif": "^5.0.0",
+    "docx-preview": "^0.3.0",
+    "electron": "28.3.3",
+    "electron-builder": "24.13.3",
+    "jszip": "3.10.1",
+    "mammoth": "^1.6.0",
+    "pdf-lib": "1.17.1",
+    "pdfjs-dist": "3.11.174",
+    "xlsx": "0.18.5"
+  },
+  "build": {
+    "appId": "com.usama.bookshelf",
+    "productName": "Book Shelf",
+    "directories": { "output": "dist" },
+    "files": ["electron/**", "www/**", "assets/icon.png", "package.json"],
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "assets/icon.png",
+      "artifactName": "Book-Shelf-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Book Shelf"
+    },
+    "fileAssociations": [
+      { "ext": "pdf", "name": "PDF Document", "description": "PDF document", "role": "Viewer" },
+      { "ext": "epub", "name": "EPUB Book", "description": "EPUB book", "role": "Viewer" },
+      { "ext": "docx", "name": "Word Document", "description": "Word document", "role": "Editor" },
+      { "ext": ["xlsx", "xls"], "name": "Excel Workbook", "description": "Excel workbook", "role": "Editor" },
+      { "ext": "pptx", "name": "PowerPoint Presentation", "description": "PowerPoint presentation", "role": "Viewer" }
+    ],
+    "publish": [{ "provider": "github", "owner": "muhammadusamaamini-ux", "repo": "book-shelf", "releaseType": "release" }]
+  }
+}

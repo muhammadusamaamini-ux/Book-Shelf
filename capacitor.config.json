@@ -1,0 +1,8 @@
+{
+  "appId": "com.usama.bookshelf",
+  "appName": "Book Shelf",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#E3E6DC"
+  }
+}
