@@ -239,7 +239,15 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .textLayer ::selection{background:rgba(40,110,255,.32)}
 .textLayer br::selection{background:transparent}
 .textLayer .endOfContent{display:block;position:absolute;inset:100% 0 0;z-index:-1;cursor:default;user-select:none}
-.anno{position:absolute;inset:0;pointer-events:none}
+.anno{position:absolute;inset:0;pointer-events:none;z-index:3}
+.cm{position:absolute;z-index:4;pointer-events:auto;width:24px;height:24px;margin:-14px 0 0 2px;border:0;border-radius:12px 12px 12px 3px;background:#3B82F6;color:#fff;font-size:12px;display:grid;place-items:center;box-shadow:0 2px 6px rgba(0,0,0,.3);cursor:pointer;padding:0}
+mark.hl.hasnote::after{content:"💬";font-size:.68em;margin-inline-start:3px;vertical-align:super;cursor:pointer}
+.cbub{position:fixed;z-index:70;width:max-content;max-width:min(320px,calc(100vw - 24px));background:var(--r-bar);color:var(--r-fg);border:1px solid var(--r-rule);border-radius:14px;box-shadow:0 14px 34px -12px rgba(0,0,0,.5);padding:12px 14px;font-size:14.5px;line-height:1.45;backdrop-filter:blur(12px)}
+.cbub .ch{font-size:11px;letter-spacing:1px;text-transform:uppercase;font-weight:700;color:var(--r-accent);margin-bottom:4px}
+.cbub .ct{white-space:pre-wrap;max-height:40vh;overflow:auto;overflow-wrap:anywhere}
+.cbub .cq{font-size:12.5px;color:var(--r-muted);margin-bottom:8px;border-inline-start:3px solid var(--cs,#D9A400);padding-inline-start:8px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.cbub .ca{display:flex;gap:8px;justify-content:flex-end;margin-top:10px;flex-wrap:wrap}
+.cbub .ca button{min-height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--r-rule);background:var(--r-chip);color:var(--r-fg);font-weight:600;font-size:13px}
 .anno svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 .ar{position:absolute;border-radius:2px;background:var(--c);mix-blend-mode:multiply}
 .pscroll[data-pf="night"] .ar{mix-blend-mode:normal;opacity:.55}
@@ -387,8 +395,10 @@ body.tts-open .pages{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 340px
 .pctl:hover,.present:focus-within .pctl{opacity:1}
 .pctl button{width:38px;height:38px;border-radius:50%;border:0;background:rgba(255,255,255,.12);color:#fff;font-size:18px}
 .pctl span{min-width:70px;text-align:center;font:600 13px var(--f-ui);font-variant-numeric:tabular-nums}
-.atx{position:absolute;white-space:pre-wrap;line-height:1.25;pointer-events:auto;font-family:"Figtree","Noto Naskh Arabic",Arial,sans-serif;font-weight:600;cursor:pointer;max-width:90%}
-.aim{position:absolute;pointer-events:none}
+.atx{position:absolute;white-space:pre-wrap;line-height:1.25;pointer-events:auto;font-family:"Figtree","Noto Naskh Arabic",Arial,sans-serif;font-weight:600;cursor:move;max-width:90%;padding:1px 3px;margin:-2px 0 0 -4px;border:1.5px dashed transparent;border-radius:4px;touch-action:none;-webkit-user-select:none;user-select:none}
+.atx:hover,.atx.drag{border-color:rgba(59,130,246,.7);background:rgba(59,130,246,.06)}
+.aim{position:absolute;pointer-events:auto;cursor:move;touch-action:none;outline:1.5px dashed transparent}
+.aim:hover,.aim.drag{outline-color:rgba(59,130,246,.7)}
 .orgv{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;background:var(--wall);color:var(--ink)}
 .orgv .obar{background:var(--panel)}
 .orgv .obar .btn{background:var(--panel-2);border-color:var(--line);color:var(--ink)}
@@ -513,7 +523,7 @@ body.tts-open .pages{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 340px
   </div>
   <div class="pscroll" id="pScroll" tabindex="-1"><div class="pages" id="pPages"></div></div>
   <div class="drawbar" id="drawbar" hidden role="toolbar" aria-label="Drawing tools">
-    <div class="rw"><button data-tool="pen">Pen</button><button data-tool="marker">Marker</button><button data-tool="text">Text</button><button data-tool="rect">Box</button><button data-tool="ellipse">Circle</button><button data-tool="arrow">Arrow</button><button data-tool="line">Line</button><button data-tool="sign">Sign</button><button data-tool="note">Note</button><button data-tool="eraser">Eraser</button></div>
+    <div class="rw"><button data-tool="pen">Pen</button><button data-tool="marker">Marker</button><button data-tool="text">Text</button><button data-tool="rect">Box</button><button data-tool="ellipse">Circle</button><button data-tool="arrow">Arrow</button><button data-tool="line">Line</button><button data-tool="sign">Sign</button><button data-tool="note">Comment</button><button data-tool="eraser">Eraser</button></div>
     <div class="rw" id="dcol"></div>
     <div class="rw"><button data-dw="2">Thin</button><button data-dw="4">Medium</button><button data-dw="8">Thick</button><button data-da="undo">Undo</button><button data-da="done" style="background:var(--r-accent);color:var(--r-bg);border-color:transparent">Done</button></div>
   </div>
@@ -590,7 +600,7 @@ body.tts-open .pages{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 340px
   <button class="dot" data-sa="hl" data-c="pink" style="--c:#E57AAE" aria-label="Pink highlight"></button>
   <button class="dot" data-sa="hl" data-c="orange" style="--c:#F09A45" aria-label="Orange highlight"></button>
   <span class="sep"></span>
-  <button data-sa="ul">Underline</button><button data-sa="st">Strike</button><button data-sa="note">Note</button><button data-sa="copy">Copy</button><button data-sa="stop">Stop here</button><button id="selLook" data-sa="define" style="background:var(--r-accent);color:var(--r-bg);border-color:transparent">Dictionary</button>
+  <button data-sa="ul">Underline</button><button data-sa="st">Strike</button><button data-sa="note">Comment</button><button data-sa="copy">Copy</button><button data-sa="stop">Stop here</button><button id="selLook" data-sa="define" style="background:var(--r-accent);color:var(--r-bg);border-color:transparent">Dictionary</button>
 </div>
 <div class="drop" id="drop" hidden>Drop PDF or EPUB files to add them</div>
 
@@ -2045,7 +2055,7 @@ $('#eScroll').addEventListener('click',e=>{
   if(a){const g=a.getAttribute('data-go');if(g){e.preventDefault();goId(g)}else if(a.getAttribute('href')==='#')e.preventDefault();return}
   if(!$('#modal').hidden&&$('#modal').classList.contains('panel')){closePanel(true);return}
   const sel=window.getSelection();if(sel&&!sel.isCollapsed)return;
-  const mk=e.target.closest('mark[data-hl]');if(mk&&R){const a=hlsOf(R.book).find(x=>x.id===mk.dataset.hl);if(a){openHlSheet(R.book,a);return}}
+  const mk=e.target.closest('mark[data-hl]');if(mk&&R){const a=hlsOf(R.book).find(x=>x.id===mk.dataset.hl);if(a){if(a.note)showComment(R.book,a,mk,e.clientX,e.clientY);else openHlSheet(R.book,a);return}}
   const x=e.clientX/window.innerWidth;
   if(rs.mode==='tap'){if(x<0.3){turn(-1);return}if(x>0.7){turn(1);return}}
   $('#epub').classList.toggle('hidebars');R&&(R.lastTop=$('#eScroll').scrollTop);
@@ -2525,7 +2535,9 @@ function wrapHl(a){
     const m=document.createElement('mark');m.className='hl '+a.kind;m.dataset.hl=a.id;m.style.cssText=hlStyle(a.color);if(a.note)m.title=a.note;
     node.parentNode.insertBefore(m,node);m.appendChild(node);
   }
+  tagNote(a);
 }
+function tagNote(a){const ms=$$(`mark[data-hl="${a.id}"]`);ms.forEach(m=>m.classList.remove('hasnote'));if(a.note&&ms.length)ms[ms.length-1].classList.add('hasnote')}
 function unwrapHl(id){$$(`mark[data-hl="${id}"]`).forEach(m=>{const p=m.parentNode;while(m.firstChild)p.insertBefore(m.firstChild,m);p.removeChild(m);p.normalize()})}
 function epubLocate(a){
   const tg=squash(a.text||'').sq;if(tg.length<2)return null;
@@ -2574,10 +2586,11 @@ function drawAnno(i){
   for(const a of hlsOf(P.book)){
     if(a.rects&&!a.failed&&!(a.src==='file'&&!a.mt))for(const r of a.rects)if(r.p===pg)h+=`<div class="ar ${a.kind}" style="left:${r.x*100}%;top:${r.y*100}%;width:${r.w*100}%;height:${r.h*100}%;${hlStyle(a.color)}"></div>`;
     if(a.kind==='ink'&&a.page===pg)svg+=`<path d="${inkD(a.pts,asp)}" fill="none" stroke="${a.color}" stroke-width="${a.w}" stroke-linecap="round" stroke-linejoin="round"${a.tool==='marker'?' opacity=".4"':''}/>`;
+    if(isTextHl(a)&&a.note&&a.rects&&!a.failed){const rr=a.rects.filter(r=>r.p===pg);if(rr.length){const r=rr[rr.length-1];h+=`<button class="cm" data-cm="${a.id}" style="left:${Math.min(97,(r.x+r.w)*100)}%;top:${r.y*100}%" aria-label="Comment">💬</button>`}}
     if(a.kind==='note'&&a.page===pg&&!a.quiet)h+=`<button class="an" data-an="${a.id}" style="left:${a.x*100}%;top:${a.y*100}%" aria-label="Note">✎</button>`;
     if(a.page===pg&&a.kind==='shape')svg+=shapeSvg(a,asp);
     if(a.page===pg&&a.kind==='text')h+=`<div class="atx" data-at="${a.id}" dir="auto" style="left:${a.x*100}%;top:${a.y*100}%;color:${a.color};font-size:${(a.size*el.offsetWidth).toFixed(1)}px">${esc(a.text)}</div>`;
-    if(a.page===pg&&a.kind==='img')h+=`<img class="aim" alt="" src="${a.src}" style="left:${a.x*100}%;top:${a.y*100}%;width:${a.w*100}%;height:${a.h*100}%">`;
+    if(a.page===pg&&a.kind==='img')h+=`<img class="aim" data-ai="${a.id}" draggable="false" alt="" src="${a.src}" style="left:${a.x*100}%;top:${a.y*100}%;width:${a.w*100}%;height:${a.h*100}%">`;
   }
   L.innerHTML=`<svg viewBox="0 0 1000 ${(1000*asp).toFixed(1)}" preserveAspectRatio="none">${svg}</svg>`+h;
 }
@@ -2630,12 +2643,15 @@ async function resolvePdfPending(i){
 }
 function pdfTap(e){
   if(!P.doc||P.rot)return false;
-  const at=e.target.closest('[data-at]');if(at){const a=hlsOf(P.book).find(x=>x.id===at.dataset.at);if(a){const book=P.book;textAnnSheet(a,v=>{if(v===undefined)return;if(v===null||!v){removeAnn(book,a)}else{a.text=v;a.mt=Date.now();drawAnno(a.page-1)}saveBook(book)});return true}}
-  const an=e.target.closest('[data-an]');if(an){const a=hlsOf(P.book).find(x=>x.id===an.dataset.an);if(a){openHlSheet(P.book,a);return true}}
+  if(typeof dragEndAt!=='undefined'&&Date.now()-dragEndAt<350)return true;
+  const at=e.target.closest('[data-at]');if(at){const a=hlsOf(P.book).find(x=>x.id===at.dataset.at);if(a){editTextAnn(P.book,a);return true}}
+  if(typeof dragEndAt!=='undefined'&&Date.now()-dragEndAt<350)return true;
+  const cmb=e.target.closest('[data-cm],[data-an]');if(cmb){const a=hlsOf(P.book).find(x=>x.id===(cmb.dataset.cm||cmb.dataset.an));if(a){showComment(P.book,a,cmb);return true}}
+  const ai=e.target.closest('[data-ai]');if(ai){const a=hlsOf(P.book).find(x=>x.id===ai.dataset.ai);if(a){imgAnnSheet(P.book,a);return true}}
   for(const i of P.visible){const el=P.els[i];const pr=el.getBoundingClientRect();if(e.clientX<pr.left||e.clientX>pr.right||e.clientY<pr.top||e.clientY>pr.bottom)continue;
     const u=(e.clientX-pr.left)/pr.width,v=(e.clientY-pr.top)/pr.height;
     const a=hlsOf(P.book).find(x=>x.rects&&!x.failed&&x.rects.some(r=>r.p===i+1&&u>=r.x-0.004&&u<=r.x+r.w+0.004&&v>=r.y-0.004&&v<=r.y+r.h+0.004));
-    if(a){openHlSheet(P.book,a);return true}return false}
+    if(a){if(a.note)showComment(P.book,a,null,e.clientX,e.clientY);else openHlSheet(P.book,a);return true}return false}
   return false;
 }
 
@@ -2648,7 +2664,7 @@ function setDraw(on){
 }
 function renderDrawbar(){
   const cols=DR.tool==='marker'?Object.keys(HL):Object.keys(INK);if(!cols.includes(DR.color))DR.color=cols[0];
-  $('#dcol').innerHTML=DR.tool==='sign'?`<span class="muted" style="font-size:13px;color:var(--r-muted)">Tap the page where your signature should go</span><button data-sig="1">${LS.get('sig',null)?'Change signature':'Create signature'}</button>`:DR.tool==='eraser'||DR.tool==='note'?`<span class="muted" style="font-size:13px;color:var(--r-muted)">${DR.tool==='eraser'?'Tap or drag over anything you added to remove it':'Tap the page where the note should go'}</span>`:cols.map(c=>`<button class="dot" data-dc="${c}" aria-pressed="${c===DR.color}" aria-label="${c}" style="--c:${DR.tool==='marker'?HL[c][1]:INK[c]}"></button>`).join('');
+  $('#dcol').innerHTML=DR.tool==='sign'?`<span class="muted" style="font-size:13px;color:var(--r-muted)">Tap the page where your signature should go</span><button data-sig="1">${LS.get('sig',null)?'Change signature':'Create signature'}</button>`:DR.tool==='eraser'||DR.tool==='note'?`<span class="muted" style="font-size:13px;color:var(--r-muted)">${DR.tool==='eraser'?'Tap or drag over anything you added to remove it':'Tap the page where the comment should go'}</span>`:cols.map(c=>`<button class="dot" data-dc="${c}" aria-pressed="${c===DR.color}" aria-label="${c}" style="--c:${DR.tool==='marker'?HL[c][1]:INK[c]}"></button>`).join('');
   $$('#drawbar [data-tool]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tool===DR.tool)));
   $$('#drawbar [data-dw]').forEach(b=>{b.setAttribute('aria-pressed',String(Number(b.dataset.dw)===DR.w));b.hidden=['eraser','note','sign'].includes(DR.tool);b.textContent=DR.tool==='text'?{2:'Small',4:'Medium',8:'Large'}[b.dataset.dw]:{2:'Thin',4:'Medium',8:'Thick'}[b.dataset.dw]});
 }
@@ -2709,16 +2725,16 @@ function removeAnn(book,a,quiet){
   if(!quiet){saveBook(book);syncTwin(book,a,'delete')}
 }
 function refreshAnn(book,a){
-  if(R&&R.book===book)$$(`mark[data-hl="${a.id}"]`).forEach(m=>{m.className='hl '+a.kind;m.style.cssText=hlStyle(a.color);m.title=a.note||''});
+  if(R&&R.book===book){$$(`mark[data-hl="${a.id}"]`).forEach(m=>{m.className='hl '+a.kind;m.style.cssText=hlStyle(a.color);m.title=a.note||''});tagNote(a)}
   if(P.book===book&&P.doc){const pages=new Set();if(a.rects)a.rects.forEach(r=>pages.add(r.p));if(a.page)pages.add(a.page);pages.forEach(p=>drawAnno(p-1))}
 }
 function openHlSheet(book,a,focusNote){
   const txt=isTextHl(a);
-  const b=sheet(`<h2>${a.kind==='note'?'Sticky note':'Highlight'}</h2>
+  const b=sheet(`<h2>${a.kind==='note'?'Comment':'Highlight'}</h2>
     ${txt?`<div class="hlq" dir="auto" style="${hlStyle(a.color)}">${esc((a.text||'').slice(0,600))}${(a.text||'').length>600?'…':''}</div>`:''}
     ${txt?`<div class="seg" style="margin-top:12px">${Object.keys(HL).map(c=>`<button data-hc="${c}" aria-pressed="${a.color===c}" style="width:34px;height:34px;padding:0;border-radius:50%;background:${HL[c][1]}" aria-label="${c}"></button>`).join('')}</div>
     <div class="seg">${[['hl','Highlight'],['ul','Underline'],['st','Strike']].map(([k,l])=>`<button data-hk="${k}" aria-pressed="${a.kind===k}">${l}</button>`).join('')}</div>`:''}
-    <label class="f" for="hlN">Note</label><textarea id="hlN" dir="auto" placeholder="Write a note">${esc(a.note||'')}</textarea>
+    <label class="f" for="hlN">Comment</label><textarea id="hlN" dir="auto" placeholder="Write a comment">${esc(a.note||'')}</textarea>
     ${a.failed?`<p class="muted" style="font-size:13px">This text couldn’t be found on the ${book.format==='pdf'?'PDF page':'EPUB page'}, so it is listed here but not marked in the book.</p>`:''}
     ${txt&&twinOf(book)?`<p class="muted" style="font-size:12.5px;margin-bottom:0">Changes also apply to the ${book.format==='pdf'?'EPUB':'PDF'} version.</p>`:''}
     <div class="mact"><button class="btn danger" data-a="del">Delete</button>${txt?'<button class="btn" data-a="copy">Copy text</button>':''}<button class="btn primary" data-a="done">Done</button></div>`);
@@ -3598,6 +3614,64 @@ async function scanShelfForFileAnnotations(){
   try{for(const b of [...books]){if(b.format!=='pdf'||b.cloud||b.fileAnnScanned===2||b.sample)continue;const n=await importFileAnnotations(b,null);if(n){total+=n;booksWith++}await sleep(50)}}
   finally{fileAnnBusy=false}
   if(total)toast(`Found ${total} highlight${total===1?'':'s'} made in other PDF apps (${booksWith} book${booksWith===1?'':'s'}). They’re in each book’s Highlights list.`);
+}
+
+
+/* ---------- comment bubbles ---------- */
+let cbubEl=null;
+function closeComment(){if(cbubEl){cbubEl.remove();cbubEl=null}}
+function showComment(book,a,anchor,cx,cy){
+  closeComment();const d=document.createElement('div');d.className='cbub';d.style.cssText=hlStyle(a.color||'yellow');
+  d.innerHTML=`<div class="ch">Comment</div>${isTextHl(a)&&a.text?`<div class="cq" dir="auto">${esc(a.text)}</div>`:''}<div class="ct" dir="auto">${a.note?esc(a.note):'<span style="color:var(--r-muted)">No comment yet</span>'}</div>
+    <div class="ca"><button data-c="del">Delete</button><button data-c="edit">Edit</button><button data-c="x">Close</button></div>`;
+  document.body.appendChild(d);cbubEl=d;
+  const r=anchor?anchor.getBoundingClientRect():{left:cx||innerWidth/2,right:cx||innerWidth/2,top:cy||innerHeight/2,bottom:cy||innerHeight/2};
+  const w=d.offsetWidth,h=d.offsetHeight;let x=clamp((r.left+r.right)/2-w/2,12,innerWidth-w-12);let y=r.bottom+8;if(y+h>innerHeight-12)y=Math.max(12,r.top-h-8);
+  d.style.left=x+'px';d.style.top=y+'px';
+  d.onclick=ev=>{const b=ev.target.closest('[data-c]');if(!b)return;const k=b.dataset.c;closeComment();
+    if(k==='edit')openHlSheet(book,a,true);
+    else if(k==='del'){if(a.kind==='note'){removeAnn(book,a)}else{a.note='';a.mt=Date.now();saveBook(book);syncTwin(book,a,'update');refreshAnn(book,a)}toast('Comment deleted')}};
+}
+document.addEventListener('pointerdown',e=>{if(cbubEl&&!cbubEl.contains(e.target)&&!e.target.closest('[data-cm],[data-an],mark.hasnote'))closeComment()},true);
+['eScroll','pScroll'].forEach(id=>{const el=$('#'+id);if(el)el.addEventListener('scroll',()=>closeComment(),{passive:true})});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&cbubEl){closeComment();e.stopPropagation()}},true);
+
+/* ---------- move and edit text boxes and signatures ---------- */
+let annDrag=null,dragEndAt=0;
+$('#pScroll').addEventListener('pointerdown',e=>{
+  const t=e.target.closest('[data-at],[data-ai]');if(!t||!P.book)return;if(DR.on&&DR.tool==='eraser')return;
+  const a=hlsOf(P.book).find(x=>x.id===(t.dataset.at||t.dataset.ai));if(!a)return;
+  e.stopPropagation();e.preventDefault();
+  const pr=t.closest('.pg').getBoundingClientRect();annDrag={a,t,pr,sx:e.clientX,sy:e.clientY,ox:a.x,oy:a.y,moved:false};
+  try{t.setPointerCapture(e.pointerId)}catch(x){}
+},true);
+window.addEventListener('pointermove',e=>{const d=annDrag;if(!d)return;const dx=(e.clientX-d.sx)/d.pr.width,dy=(e.clientY-d.sy)/d.pr.height;
+  if(!d.moved&&Math.hypot(e.clientX-d.sx,e.clientY-d.sy)<6)return;d.moved=true;d.t.classList.add('drag');
+  d.a.x=+clamp(d.ox+dx,0,0.97).toFixed(4);d.a.y=+clamp(d.oy+dy,0,0.97).toFixed(4);d.t.style.left=d.a.x*100+'%';d.t.style.top=d.a.y*100+'%'});
+function endAnnDrag(){const d=annDrag;annDrag=null;if(!d)return;d.t.classList.remove('drag');
+  if(d.moved){dragEndAt=Date.now();d.a.mt=Date.now();saveBook(P.book);drawAnno(d.a.page-1)}
+  else{dragEndAt=Date.now();if(d.a.kind==='text')editTextAnn(P.book,d.a);else imgAnnSheet(P.book,d.a)}}
+window.addEventListener('pointerup',endAnnDrag);window.addEventListener('pointercancel',endAnnDrag);
+function editTextAnn(book,a){
+  const sizes={0.016:'Small',0.024:'Medium',0.036:'Large'};const cols=Object.keys(INK);
+  const b=sheet(`<h2>Text on the page</h2><textarea id="taT" dir="auto">${esc(a.text||'')}</textarea>
+    <div class="seg" id="taS" style="margin-top:10px">${Object.entries(sizes).map(([v,l])=>`<button data-v="${v}" aria-pressed="${Math.abs(a.size-Number(v))<0.001}">${l}</button>`).join('')}</div>
+    <div class="seg" id="taC" style="margin-top:8px">${cols.map(c=>`<button data-c="${c}" aria-pressed="${INK[c]===a.color}" aria-label="${c}" style="width:32px;height:32px;padding:0;border-radius:50%;background:${INK[c]}"></button>`).join('')}</div>
+    <p class="muted" style="font-size:13px">To move it, close this and drag the text on the page.</p>
+    <div class="mact"><button class="btn danger" data-a="del">Delete</button><button class="btn" data-a="x">Cancel</button><button class="btn primary" data-a="ok">Done</button></div>`);
+  let size=a.size,color=a.color;
+  b.onclick=e=>{const sb=e.target.closest('#taS [data-v]');if(sb){size=Number(sb.dataset.v);$$('#taS button').forEach(x=>x.setAttribute('aria-pressed',String(x===sb)));return}
+    const cb=e.target.closest('#taC [data-c]');if(cb){color=INK[cb.dataset.c];$$('#taC button').forEach(x=>x.setAttribute('aria-pressed',String(x===cb)));return}
+    const k=e.target.closest('[data-a]');if(!k)return;const v=$('#taT').value.trim();closeSheet();
+    if(k.dataset.a==='del'||(k.dataset.a==='ok'&&!v)){removeAnn(book,a);saveBook(book);return}
+    if(k.dataset.a==='ok'){a.text=v;a.size=size;a.color=color;a.mt=Date.now();saveBook(book);drawAnno(a.page-1)}};
+}
+function imgAnnSheet(book,a){
+  const b=sheet(`<h2>Signature</h2><p class="muted">Drag it on the page to move it.</p><div class="mact" style="justify-content:flex-start"><button class="btn" data-a="sm">Smaller</button><button class="btn" data-a="lg">Bigger</button></div>
+    <div class="mact"><button class="btn danger" data-a="del">Delete</button><button class="btn primary" data-a="x">Done</button></div>`);
+  b.onclick=e=>{const k=e.target.closest('[data-a]');if(!k)return;const c=k.dataset.a;
+    if(c==='sm'||c==='lg'){const f=c==='sm'?0.85:1.18;a.w=+clamp(a.w*f,0.05,0.9).toFixed(4);a.h=+(a.h*(a.w/(a.w/f))).toFixed(4);a.h=+clamp(a.h,0.01,0.9).toFixed(4);a.mt=Date.now();saveBook(book);drawAnno(a.page-1);return}
+    closeSheet();if(c==='del'){removeAnn(book,a);saveBook(book)}};
 }
 
 /* ================= PDF → EPUB conversion ================= */
