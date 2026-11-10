@@ -3596,8 +3596,8 @@ function extractSheet(book){
     <div class="mact"><button class="btn" data-a="x">Close</button></div>`);
   b.onclick=async e=>{const a=e.target.closest('[data-a]');if(!a)return;if(a.dataset.a==='x'){closeSheet();return}
     try{const bytes=await pdfBytesOf(book);const src=await loadLibDoc(bytes);const N=src.getPageCount();
-      if(a.dataset.a==='ex'){const idx=parseRanges($('#exR').value,N);if(!idx||!idx.length){toast('Type pages like 1-3, 7, 10-end');return}
-        toolBusy('Extracting pages');const out=await PDFLib.PDFDocument.create();(await out.copyPages(src,idx)).forEach(p=>out.addPage(p));const r=await out.save();closeSheet();await addPdfToShelf(r,`${book.title} (pages ${$('#exR').value||''})`.slice(0,110))}
+      if(a.dataset.a==='ex'){const rng=$('#exR').value.trim();const idx=parseRanges(rng,N);if(!idx||!idx.length){toast('Type pages like 1-3, 7, 10-end');return}
+        toolBusy('Extracting pages');const out=await PDFLib.PDFDocument.create();(await out.copyPages(src,idx)).forEach(p=>out.addPage(p));const r=await out.save();closeSheet();await addPdfToShelf(r,`${book.title} (pages ${rng})`.slice(0,110))}
       else{const per=parseInt($('#spN').value,10);if(!(per>=1&&per<N)){toast('Type a number smaller than the page count');return}
         toolBusy('Splitting');for(let s=0,part=1;s<N;s+=per,part++){const out=await PDFLib.PDFDocument.create();const idx=[];for(let i=s;i<Math.min(N,s+per);i++)idx.push(i);(await out.copyPages(src,idx)).forEach(p=>out.addPage(p));setBusy(`Part ${part}`,s/N);
           await addPdfToShelf(await out.save(),`${book.title} (part ${part})`)}closeSheet()}
