@@ -3285,6 +3285,26 @@ const BS={
       const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);return true;
     }catch(e){console.warn(e);toast('The file couldn’t be saved: '+(e&&e.message||'unknown problem'));return false}
   },
+  /* choose a folder, then write several files into it */
+  async pickFolder(){
+    try{
+      if(this.platform==='windows'){const r=await window.electronAPI.pickFolder();return r&&r.path?{path:r.path,label:r.path}:null}
+      if(this.platform==='android'){const r=await this.native.pickFolder();return r&&r.uri?{uri:r.uri,label:r.name||''}:null}
+      return {zip:new JSZip(),label:''};
+    }catch(e){console.warn(e);toast('The folder couldn’t be opened: '+(e&&e.message||'unknown problem'));return null}
+  },
+  async writeToFolder(dir,name,data,mime){
+    try{
+      const u8=data instanceof Uint8Array?data:new Uint8Array(data instanceof Blob?await data.arrayBuffer():data);
+      if(dir.zip){dir.zip.file(name,u8);return true}
+      if(this.platform==='windows'){const r=await window.electronAPI.writeToFolder(dir.path,name,u8);return !!(r&&r.saved)}
+      if(this.platform==='android'){const r=await this.native.writeToFolder({uri:dir.uri,name,mime:mime||'application/octet-stream',data:bufToB64(u8.buffer.slice(u8.byteOffset,u8.byteOffset+u8.byteLength))});return !!(r&&r.saved)}
+    }catch(e){console.warn(e)}
+    return false;
+  },
+  async finishFolder(dir){
+    if(dir&&dir.zip){const blob=await dir.zip.generateAsync({type:'blob'});dir.zip=null;await this.saveFile('Pages.zip',blob,'application/zip')}
+  },
   /* files opened from outside ("Open with" / Share) */
   async takeIncoming(){
     try{
@@ -3571,7 +3591,9 @@ $('#orgView').addEventListener('click',async e=>{const b=e.target.closest('[data
   else if(a==='del'){if(sel.length===ORG.items.length){toast('A PDF needs at least one page');return}ORG.items=ORG.items.filter(x=>!ORG.sel.has(x.id));ORG.sel.clear()}
   else if(a==='up'||a==='down'){const arr=ORG.items;if(a==='up'){for(let i=1;i<arr.length;i++)if(ORG.sel.has(arr[i].id)&&!ORG.sel.has(arr[i-1].id))[arr[i-1],arr[i]]=[arr[i],arr[i-1]]}else{for(let i=arr.length-2;i>=0;i--)if(ORG.sel.has(arr[i].id)&&!ORG.sel.has(arr[i+1].id))[arr[i+1],arr[i]]=[arr[i],arr[i+1]]}}
   else if(a==='blank'){const last=sel.length?ORG.items.indexOf(sel[sel.length-1]):ORG.items.length-1;ORG.items.splice(last+1,0,{blank:true,src:ORG.items[Math.max(0,last)].src,rot:0,id:uid()})}
-  else if(a==='extract'){await orgSave(sel,' (pages)');return}
+  else if(a==='extract'){if(!sel.length){toast('Select the pages to extract first');return}
+    const opts=await askPdfSaveOpts({title:'Extract pages',count:sel.length,askMode:true});if(!opts)return;
+    await savePdfPages(await loadLibDoc(ORG.bytes),sel,ORG.book.title,' (pages)',opts,()=>{$('#orgView').hidden=true});return}
   orgRender();
 });
 async function orgSave(items,suffix){
@@ -3586,21 +3608,99 @@ async function orgSave(items,suffix){
 }
 
 /* --- extract / split --- */
+/* Asks how to save pages: one PDF or one per page, and where (shelf, a folder, or both). */
+function askPdfSaveOpts({title,count,askMode}){
+  return new Promise(res=>{
+    const last=LS.get('pdfSaveOpts',{each:false,dest:'shelf'});
+    const web=BS.platform==='web';
+    const r=(name,val,label,sub,on)=>`<label class="chk"><input type="radio" name="${name}" value="${val}"${on?' checked':''}><span>${label}${sub?`<br><small class="muted">${sub}</small>`:''}</span></label>`;
+    const b=sheet(`<h2>${esc(title)}</h2><p class="muted" style="margin:0">${count} page${count===1?'':'s'} chosen</p>
+      ${askMode&&count>1?`<label class="f">Make</label>
+        ${r('pgMode','one','One PDF','All the chosen pages in one file',!last.each)}
+        ${r('pgMode','each','A separate PDF for each page',`${count} files, one page each`,last.each)}`:''}
+      <label class="f">Save to</label>
+      ${r('pgDest','shelf','Your shelf','Inside Book Shelf, ready to read',last.dest==='shelf')}
+      ${r('pgDest','folder',web?'Download to this device':'A folder you choose',web?'Several files come as one .zip':BS.platform==='android'?'On your phone, an SD card or Google Drive':'On your computer, including your Google Drive (G:) folder',last.dest==='folder')}
+      ${r('pgDest','both','Both','Your shelf and a folder',last.dest==='both')}
+      <div class="mact"><button class="btn" data-a="x">Cancel</button><button class="btn primary" data-a="ok">Save</button></div>`);
+    sheetClose=()=>res(null);
+    b.onclick=e=>{const a=e.target.closest('[data-a]');if(!a)return;sheetClose=null;
+      if(a.dataset.a!=='ok'){closeSheet();res(null);return}
+      const mode=b.querySelector('input[name=pgMode]:checked'),dest=b.querySelector('input[name=pgDest]:checked');
+      const o={each:!!(mode&&mode.value==='each'),dest:dest?dest.value:'shelf'};
+      if(askMode&&count>1)LS.set('pdfSaveOpts',o);else LS.set('pdfSaveOpts',{...last,dest:o.dest});
+      res(o)};
+  });
+}
+/* items: [{src, rot, blank}] page indexes of srcDoc. Builds the PDF(s) and saves them where the person chose. */
+async function savePdfPages(srcDoc,items,baseTitle,suffix,opts,afterBuild){
+  const toFolder=opts.dest!=='shelf',toShelf=opts.dest!=='folder';
+  const each=opts.each&&items.length>1;
+  let dir=null;
+  if(toFolder&&each){dir=await BS.pickFolder();if(!dir){if(!toShelf){toast('Nothing was saved');return}}}
+  toolBusy(each?'Making the PDFs':'Making the PDF');
+  try{
+    const addPage=async(out,it)=>{
+      if(it.blank){const {width,height}=srcDoc.getPage(it.src).getSize();out.addPage([width,height]);return}
+      const [p]=await out.copyPages(srcDoc,[it.src]);const base=p.getRotation().angle||0;if(it.rot)p.setRotation(PDFLib.degrees((base+it.rot)%360));out.addPage(p)};
+    const files=[];
+    if(each){
+      for(let k=0;k<items.length;k++){const it=items[k];const out=await PDFLib.PDFDocument.create();await addPage(out,it);
+        files.push({name:`${baseTitle} - ${it.blank?'blank page '+(k+1):'page '+(it.src+1)}`.slice(0,120),bytes:await out.save()});setBusy(`Page ${k+1} of ${items.length}`,(k+1)/items.length/(toFolder?2:1))}
+    }else{
+      const out=await PDFLib.PDFDocument.create();
+      for(let k=0;k<items.length;k++){await addPage(out,items[k]);if(k%10===0)setBusy(`Page ${k+1} of ${items.length}`,k/items.length)}
+      files.push({name:(baseTitle+suffix).slice(0,120),bytes:await out.save()});
+    }
+    if(afterBuild)afterBuild();
+    await deliverPdfs(files,{toFolder,toShelf,dir});
+  }catch(e){toolErr(e)}
+}
+/* Saves finished PDFs to the shelf and/or a folder. files: [{name, bytes}] */
+async function deliverPdfs(files,{toFolder,toShelf,dir}){
+  let folderMsg='';
+  if(toFolder&&files.length===1){closeSheet();const ok=await BS.saveFile(safeName(files[0].name)+'.pdf',new Blob([files[0].bytes],{type:'application/pdf'}),'application/pdf');if(!ok&&!toShelf){toast('Nothing was saved');return}}
+  else if(toFolder&&dir){
+    toolBusy('Saving to your folder');let saved=0;
+    for(let k=0;k<files.length;k++){if(await BS.writeToFolder(dir,safeName(files[k].name)+'.pdf',files[k].bytes,'application/pdf'))saved++;setBusy(`File ${k+1} of ${files.length}`,(k+1)/files.length)}
+    await BS.finishFolder(dir);closeSheet();
+    folderMsg=saved===files.length?`Saved ${saved} PDFs${dir.label?' to '+dir.label:''}`:`Saved ${saved} of ${files.length} PDFs. Some couldn’t be written.`;
+    if(!toShelf){toast(folderMsg);return}
+  }
+  if(toShelf){
+    if(files.length>1)toolBusy('Adding to your shelf');
+    let nb=null;for(let k=0;k<files.length;k++){nb=await addPdfToShelf(files[k].bytes,files[k].name);if(files.length>1)setBusy(`File ${k+1} of ${files.length}`,(k+1)/files.length)}
+    closeSheet();
+    if(files.length>1)toast(`Added ${files.length} PDFs to your shelf`+(folderMsg?' and saved them to your folder':''));
+    else if(folderMsg)toast(folderMsg);
+  }else closeSheet();
+}
 function extractSheet(book){
   const n=book.pages||0;
   const b=sheet(`<h2>Extract or split pages</h2><p class="muted" style="margin:0">${esc(book.title)} · ${n} pages</p>
     <label class="f" for="exR">Pages to extract<input type="text" id="exR" placeholder="e.g. 1-3, 7, 10-end" autocomplete="off"></label>
-    <div class="mact" style="justify-content:flex-start"><button class="btn primary" data-a="ex">Extract to a new PDF</button></div>
+    <div class="mact" style="justify-content:flex-start"><button class="btn primary" data-a="ex">Extract…</button></div>
     <label class="f" for="spN">Or split into parts of this many pages<input type="text" id="spN" inputmode="numeric" placeholder="e.g. 10"></label>
-    <div class="mact" style="justify-content:flex-start"><button class="btn" data-a="sp">Split</button></div>
+    <div class="mact" style="justify-content:flex-start"><button class="btn" data-a="sp">Split…</button></div>
     <div class="mact"><button class="btn" data-a="x">Close</button></div>`);
   b.onclick=async e=>{const a=e.target.closest('[data-a]');if(!a)return;if(a.dataset.a==='x'){closeSheet();return}
-    try{const bytes=await pdfBytesOf(book);const src=await loadLibDoc(bytes);const N=src.getPageCount();
-      if(a.dataset.a==='ex'){const rng=$('#exR').value.trim();const idx=parseRanges(rng,N);if(!idx||!idx.length){toast('Type pages like 1-3, 7, 10-end');return}
-        toolBusy('Extracting pages');const out=await PDFLib.PDFDocument.create();(await out.copyPages(src,idx)).forEach(p=>out.addPage(p));const r=await out.save();closeSheet();await addPdfToShelf(r,`${book.title} (pages ${rng})`.slice(0,110))}
-      else{const per=parseInt($('#spN').value,10);if(!(per>=1&&per<N)){toast('Type a number smaller than the page count');return}
-        toolBusy('Splitting');for(let s=0,part=1;s<N;s+=per,part++){const out=await PDFLib.PDFDocument.create();const idx=[];for(let i=s;i<Math.min(N,s+per);i++)idx.push(i);(await out.copyPages(src,idx)).forEach(p=>out.addPage(p));setBusy(`Part ${part}`,s/N);
-          await addPdfToShelf(await out.save(),`${book.title} (part ${part})`)}closeSheet()}
+    try{
+      if(a.dataset.a==='ex'){const rng=$('#exR').value.trim();
+        const src=await loadLibDoc(await pdfBytesOf(book));const N=src.getPageCount();
+        const idx=parseRanges(rng,N);if(!idx||!idx.length){toast('Type pages like 1-3, 7, 10-end');return}
+        const opts=await askPdfSaveOpts({title:'Extract pages',count:idx.length,askMode:true});if(!opts)return;
+        await savePdfPages(src,idx.map(i=>({src:i,rot:0})),book.title,` (pages ${rng})`,opts)}
+      else{const per=parseInt($('#spN').value,10);
+        const src=await loadLibDoc(await pdfBytesOf(book));const N=src.getPageCount();
+        if(!(per>=1&&per<N)){toast('Type a number smaller than the page count');return}
+        const parts=Math.ceil(N/per);
+        const opts=await askPdfSaveOpts({title:`Split into ${parts} parts`,count:N,askMode:false});if(!opts)return;
+        const toFolder=opts.dest!=='shelf',toShelf=opts.dest!=='folder';
+        let dir=null;if(toFolder){dir=await BS.pickFolder();if(!dir&&!toShelf){toast('Nothing was saved');return}}
+        toolBusy('Splitting');const files=[];
+        for(let s=0,part=1;s<N;s+=per,part++){const out=await PDFLib.PDFDocument.create();const idx=[];for(let i=s;i<Math.min(N,s+per);i++)idx.push(i);(await out.copyPages(src,idx)).forEach(p=>out.addPage(p));setBusy(`Part ${part} of ${parts}`,s/N);
+          files.push({name:`${book.title} (part ${part})`,bytes:await out.save()})}
+        await deliverPdfs(files,{toFolder:toFolder&&!!dir,toShelf,dir})}
     }catch(x){toolErr(x)}};
 }
 /* --- merge --- */

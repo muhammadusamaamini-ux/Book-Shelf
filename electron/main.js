@@ -79,6 +79,29 @@ ipcMain.handle('save-file', async (_e, name, data) => {
   return { saved: true, path: r.filePath };
 });
 
+// ---- choose a folder, then write files into it (only folders the person picked)
+const pickedFolders = new Set();
+ipcMain.handle('pick-folder', async () => {
+  const r = await dialog.showOpenDialog(win, {
+    title: 'Choose where to save', buttonLabel: 'Save here',
+    defaultPath: app.getPath('documents'), properties: ['openDirectory', 'createDirectory', 'promptToCreate']
+  });
+  if (r.canceled || !r.filePaths || !r.filePaths[0]) return { path: null };
+  const dir = r.filePaths[0];
+  fs.mkdirSync(dir, { recursive: true });
+  pickedFolders.add(dir);
+  return { path: dir };
+});
+ipcMain.handle('write-to-folder', async (_e, dir, name, data) => {
+  if (!pickedFolders.has(dir)) return { saved: false };
+  const safe = path.basename(String(name)).replace(/[<>:"/\\|?*\x00-\x1f]/g, '_') || 'file';
+  const ext = path.extname(safe), stem = safe.slice(0, safe.length - ext.length);
+  let file = path.join(dir, safe);
+  for (let i = 2; fs.existsSync(file); i++) file = path.join(dir, `${stem} (${i})${ext}`);
+  fs.writeFileSync(file, Buffer.from(data));
+  return { saved: true, path: file };
+});
+
 // ---- updates from GitHub Releases
 autoUpdater.autoDownload = false;
 autoUpdater.autoInstallOnAppQuit = true;

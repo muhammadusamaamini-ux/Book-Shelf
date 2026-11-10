@@ -10,6 +10,7 @@ import androidx.core.content.ContextCompat;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
+import android.provider.DocumentsContract;
 import android.provider.OpenableColumns;
 import android.provider.Settings;
 import android.util.Base64;
@@ -183,6 +184,62 @@ public class BookShelfNative extends Plugin {
             call.reject("The file couldn't be written: " + e.getMessage());
         } finally {
             pendingSave = null;
+        }
+    }
+
+    /** Lets the person choose a folder (phone storage, SD card, Google Drive...). */
+    @PluginMethod
+    public void pickFolder(PluginCall call) {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        startActivityForResult(call, intent, "folderResult");
+    }
+
+    @ActivityCallback
+    private void folderResult(PluginCall call, ActivityResult result) {
+        if (call == null) return;
+        JSObject ret = new JSObject();
+        if (result.getResultCode() != Activity.RESULT_OK || result.getData() == null || result.getData().getData() == null) {
+            call.resolve(ret);
+            return;
+        }
+        Uri tree = result.getData().getData();
+        try {
+            getContext().getContentResolver().takePersistableUriPermission(tree, Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        } catch (Exception ignored) { }
+        String name = "";
+        try {
+            Uri doc = DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree));
+            try (Cursor c = getContext().getContentResolver().query(doc, new String[]{DocumentsContract.Document.COLUMN_DISPLAY_NAME}, null, null, null)) {
+                if (c != null && c.moveToFirst()) name = c.getString(0);
+            }
+        } catch (Exception ignored) { }
+        ret.put("uri", tree.toString());
+        ret.put("name", name);
+        call.resolve(ret);
+    }
+
+    /** Writes one file into a folder chosen with pickFolder. */
+    @PluginMethod
+    public void writeToFolder(PluginCall call) {
+        String uri = call.getString("uri");
+        String name = call.getString("name", "file");
+        String mime = call.getString("mime", "application/octet-stream");
+        String data = call.getString("data", "");
+        if (uri == null) { call.reject("No folder"); return; }
+        try {
+            Uri tree = Uri.parse(uri);
+            Uri dir = DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree));
+            Uri file = DocumentsContract.createDocument(getContext().getContentResolver(), dir, mime, name);
+            if (file == null) throw new Exception("the folder didn't accept a new file");
+            try (OutputStream out = getContext().getContentResolver().openOutputStream(file)) {
+                out.write(Base64.decode(data, Base64.DEFAULT));
+            }
+            JSObject ret = new JSObject();
+            ret.put("saved", true);
+            call.resolve(ret);
+        } catch (Exception e) {
+            call.reject("The file couldn't be written: " + e.getMessage());
         }
     }
 

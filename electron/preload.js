@@ -4,6 +4,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   takePendingFiles: () => ipcRenderer.invoke('take-files'),
   onOpenFile: cb => ipcRenderer.on('open-file', () => cb()),
   saveFile: (name, data) => ipcRenderer.invoke('save-file', name, data),
+  pickFolder: () => ipcRenderer.invoke('pick-folder'),
+  writeToFolder: (dir, name, data) => ipcRenderer.invoke('write-to-folder', dir, name, data),
   checkUpdate: () => ipcRenderer.invoke('update-check'),
   downloadUpdate: () => ipcRenderer.invoke('update-download'),
   installUpdate: () => ipcRenderer.invoke('update-install'),
