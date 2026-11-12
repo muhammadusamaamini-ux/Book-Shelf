@@ -59,6 +59,12 @@ function createWindow() {
   win.webContents.on('will-navigate', (e, url) => {
     if (!url.startsWith('app://')) { e.preventDefault(); if (/^https?:/i.test(url)) shell.openExternal(url); }
   });
+  // Ctrl+W closes the open tab (not the window); Ctrl+Tab moves between tabs
+  win.webContents.on('before-input-event', (e, input) => {
+    if (input.type !== 'keyDown' || !(input.control || input.meta) || input.alt) return;
+    const k = (input.key || '').toLowerCase();
+    if (k === 'w' && !input.shift) { e.preventDefault(); win.webContents.send('tab-key', 'close'); }
+  });
   win.loadURL('app://bookshelf/index.html');
 }
 app.on('window-all-closed', () => app.quit());

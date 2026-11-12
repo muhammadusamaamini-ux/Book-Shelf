@@ -14,6 +14,7 @@ After the first install, the app tells you when a new version is out (a card on 
 ## What it does
 
 - Bookshelf, sorted by what you read last
+- Tabs for several open books, and split view to read two side by side (drag the bar between them to resize)
 - EPUB reader: text size, text width, fonts, themes, continuous scroll, Urdu and Pashto support
 - PDF reader: zoom, night mode, outline, search, bookmarks
 - Keyboard shortcuts you can change (⋯ → Keyboard shortcuts), and the Delete key removes the selected highlight, comment, text or signature

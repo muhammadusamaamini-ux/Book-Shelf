@@ -241,6 +241,50 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .textLayer .endOfContent{display:block;position:absolute;inset:100% 0 0;z-index:-1;cursor:default;user-select:none}
 .anno{position:absolute;inset:0;pointer-events:none;z-index:3}
 .cm{position:absolute;z-index:4;pointer-events:auto;width:24px;height:24px;margin:-14px 0 0 2px;border:0;border-radius:12px 12px 12px 3px;background:#3B82F6;color:#fff;font-size:12px;display:grid;place-items:center;box-shadow:0 2px 6px rgba(0,0,0,.3);cursor:pointer;padding:0}
+:root{--tbh:44px}
+#tabbar{position:fixed;top:0;left:0;right:0;z-index:35;height:calc(var(--tbh) + env(safe-area-inset-top,0px));padding:env(safe-area-inset-top,0px) max(6px,env(safe-area-inset-right,0px)) 0 max(6px,env(safe-area-inset-left,0px));display:flex;align-items:center;gap:4px;background:var(--wall-2);border-bottom:1px solid var(--line);transition:transform .22s ease}
+#tabbar .tbtabs{flex:1;min-width:0;display:flex;gap:3px;overflow-x:auto;scrollbar-width:none;align-items:center;height:100%;padding:0 2px}
+#tabbar .tbtabs::-webkit-scrollbar{display:none}
+.tab{flex:0 1 220px;min-width:112px;max-width:240px;height:34px;display:flex;align-items:center;gap:7px;padding:0 3px 0 10px;border-radius:10px;color:var(--ink-2);cursor:pointer;user-select:none;-webkit-user-select:none;touch-action:pan-x;border:1px solid transparent;position:relative}
+.tab:hover{background:var(--panel)}
+.tab.ton{background:var(--panel-2);color:var(--ink);border-color:var(--line)}
+.tab.ton::after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:2px;border-radius:2px;background:var(--brass)}
+.tab span{flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:13px;font-weight:500}
+.tab>.i{width:16px;height:16px}
+.tab .ttx{width:26px;height:26px;border:0;border-radius:8px;background:none;display:grid;place-items:center;color:inherit;opacity:.6;flex:none}
+.tab .ttx:hover{opacity:1;background:var(--line)}
+.tab .ttx .i{width:14px;height:14px}
+.tab.tgrp{background:color-mix(in srgb,var(--brass) 13%,transparent);border-color:color-mix(in srgb,var(--brass) 35%,transparent)}
+.tab.tgrp.on{background:color-mix(in srgb,var(--brass) 24%,var(--panel-2))}
+.tab.tga{border-top-right-radius:4px;border-bottom-right-radius:4px}
+.tab.tgb{border-top-left-radius:4px;border-bottom-left-radius:4px}
+.tab.tsleep span{opacity:.8}
+.tab.tdrag{z-index:2;box-shadow:0 6px 18px var(--shadow);background:var(--panel-2);transition:none}
+#tabbar .tth,#tabbar .tts{width:40px;height:34px;border:0;border-radius:10px;background:transparent;color:var(--ink-2);display:grid;place-items:center;flex:none}
+#tabbar .tth:hover,#tabbar .tts:hover{background:var(--panel)}
+#tabbar .tth.ton,#tabbar .tts.ton{color:var(--brass);background:var(--panel)}
+#tabbar .tts:disabled{opacity:.35;cursor:default}
+body.hastabs #app{padding-top:calc(var(--tbh) + 20px)}
+#tabArea{position:fixed;left:0;right:0;bottom:0;top:calc(var(--tbh) + env(safe-area-inset-top,0px));z-index:34;background:var(--wall-2);transition:top .22s ease}
+body.tabs-imm #tabbar{transform:translateY(-100%)}
+body.tabs-imm #tabArea{top:0}
+#tabArea iframe{position:absolute;border:0;display:block;background:var(--wall)}
+#tabArea iframe.tpane{border:2px solid transparent;border-radius:8px}
+#tabArea iframe.tpane.tfocus{border-color:var(--brass)}
+#tabDiv{position:absolute;z-index:3;touch-action:none;display:grid;place-items:center}
+#tabDiv.h{cursor:col-resize}#tabDiv.v{cursor:row-resize}
+#tabDiv::before{content:"";background:var(--ink-2);opacity:.55;border-radius:3px}
+#tabDiv.h::before{width:4px;height:48px}#tabDiv.v::before{height:4px;width:48px}
+#tabDiv:hover::before{opacity:1;background:var(--brass)}
+#tabShield{position:fixed;inset:0;z-index:36;cursor:grabbing}
+#tabShield.rz{cursor:col-resize}
+#tabShield.drop::after{content:"";position:fixed;background:color-mix(in srgb,var(--brass) 20%,transparent);border:2px dashed var(--brass);border-radius:12px}
+#tabShield.drop.h.a::after{left:8px;top:calc(var(--tbh) + 8px);bottom:8px;width:calc(50% - 12px)}
+#tabShield.drop.h.b::after{right:8px;top:calc(var(--tbh) + 8px);bottom:8px;width:calc(50% - 12px)}
+#tabShield.drop.v.a::after{left:8px;right:8px;top:calc(var(--tbh) + 8px);height:calc(50% - var(--tbh)/2 - 12px)}
+#tabShield.drop.v.b::after{left:8px;right:8px;bottom:8px;height:calc(50% - var(--tbh)/2 - 12px)}
+#pickBanner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 16px;margin-bottom:16px;border-radius:14px;background:color-mix(in srgb,var(--brass) 16%,var(--panel));border:1px solid var(--brass)}
+html.embed #app,html.embed #tabbar,html.embed #tabArea,html.embed #tabShield{display:none!important}
 #appMenuBtn{position:relative}#appMenuBtn.updot::after{content:"";position:absolute;top:7px;right:7px;width:9px;height:9px;border-radius:50%;background:#D93025;box-shadow:0 0 0 2px var(--wall,#fff)}
 #updCard{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:40;width:min(560px,calc(100% - 24px));display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:14px 16px;border-radius:16px;background:var(--panel,#fff);color:var(--ink,#1f1f1f);border:1px solid var(--line,rgba(0,0,0,.1));box-shadow:0 10px 30px rgba(0,0,0,.18);animation:ucin .25s ease-out}
 #updCard .uc-t{flex:1 1 220px;min-width:0;display:flex;flex-direction:column;gap:2px}#updCard .uc-t b{font-size:15px}#updCard .uc-t span{font-size:13px;opacity:.75}
@@ -468,6 +512,7 @@ body.tts-open .pages{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 340px
   <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
 </svg>
 
+<div id="tabbar" hidden></div><div id="tabArea" hidden><div id="tabDiv" hidden></div></div><div id="tabShield" hidden></div>
 <div id="app">
   <header class="top">
     <div class="brand"><span class="mark" aria-hidden="true"><svg viewBox="0 0 32 32" width="30" height="30"><path d="M16 9.5c-2.6-2-6.3-2.6-10-1.9v15.2c3.7-.7 7.4-.1 10 1.9 2.6-2 6.3-2.6 10-1.9V7.6c-3.7-.7-7.4-.1-10 1.9z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M16 9.5v15.2" stroke="currentColor" stroke-width="1.9"/><path d="M19.5 13.8c1.6-1.9 3.4-2.6 4.6-2.7-.2 2.6-1.8 4.6-4.6 5.1" fill="currentColor" opacity=".85"/></svg></span><div><h1>Book Shelf</h1><p id="stat">Your reading room</p></div></div>
@@ -619,7 +664,9 @@ body.tts-open .pages{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 340px
 </div>
 <div class="drop" id="drop" hidden>Drop PDF or EPUB files to add them</div>
 
-<script src="lib/capacitor.js"></script>
+<script>window.EMBED=(function(){try{return window.parent!==window&&/[?&]tab=/.test(location.search)&&!!window.parent.__shelf}catch(e){return false}})();
+if(window.EMBED){document.documentElement.classList.add('embed');try{window.Capacitor=window.parent.Capacitor;if(window.parent.electronAPI)window.electronAPI=window.parent.electronAPI}catch(e){}}
+else document.write('<script src="lib/capacitor.js"><\/script>');</script>
 <script src="lib/pdf.min.js"></script>
 <script src="lib/jszip.min.js"></script>
 <script src="lib/pdf-lib.min.js"></script>
@@ -1614,7 +1661,7 @@ function sameBook(a,b){
   if(a.format==='epub')return normT(a.author)===normT(b.author);
   return false;
 }
-const isOpenBook=b=>(R&&R.book===b)||P.book===b||O.book===b;
+const isOpenBook=b=>(R&&R.book===b)||P.book===b||O.book===b||!!(b&&window.__tabsHas&&window.__tabsHas(b.id));
 /* puts everything from d into t, then removes d */
 async function mergeInto(t,d,remote){
   if(t.cloud&&!d.cloud){const f=await Store.getFile(d.id);if(f){await Store.putFile(t.id,await f.arrayBuffer(),mimeOf(t.format));t.cloud=false;t.size=d.size||t.size}}
@@ -1946,6 +1993,7 @@ function bookMenu(b){
   const body=sheet(`<h2>${esc(b.title)}</h2><p class="muted stat" style="margin:0">${b.format==='pdf'?`PDF · ${b.pages} pages`:'EPUB'}${b.size?' · '+fmtSize(b.size):''}${b.format==='pdf'&&!b.hasText?' · looks scanned':''}</p>
    <div class="menu">
     <button data-m="open"><svg class="i"><use href="#i-book"/></svg><span>Open</span></button>
+    ${(()=>{const l=typeof Tabs!=='undefined'&&Tabs.get(Tabs.last);const lb=l&&byId(l.bookId);return lb&&lb!==b?`<button data-m="beside"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/></svg><span>Open beside “${esc(lb.title)}”<small>Split view: both books on screen</small></span></button>`:''})()}
     ${b.format==='pdf'?(conv?`<button data-m="openconv"><svg class="i"><use href="#i-type"/></svg><span>Read the EPUB version<small>Adjustable text, made from this PDF</small></span></button><button data-m="convert"><svg class="i"><use href="#i-conv"/></svg><span>Convert again</span></button>`:`<button data-m="convert"><svg class="i"><use href="#i-conv"/></svg><span>Convert to EPUB<small>${b.hasText?'Reflowable text you can resize and narrow':'Scanned pages will be kept as pictures'}</small></span></button>`):''}
     ${src?`<button data-m="opensrc"><svg class="i"><use href="#i-file"/></svg><span>Open original PDF</span></button>`:''}
     ${b.format==='pdf'&&!b.cloud?'<button data-m="tools"><svg class="i"><use href="#i-file"/></svg><span>PDF tools<small>Organise pages, merge, split, compress, convert…</small></span></button>':''}
@@ -1956,6 +2004,7 @@ function bookMenu(b){
    </div>`);
   body.onclick=async e=>{const a=e.target.closest('[data-m]');if(!a)return;const m=a.dataset.m;
     if(m==='open'){closeSheet();openBook(b)}
+    else if(m==='beside'){closeSheet();Tabs.open(b,{beside:Tabs.last})}
     else if(m==='openconv'){closeSheet();openBook(conv)}
     else if(m==='opensrc'){closeSheet();openBook(src)}
     else if(m==='convert')openConvert(b);
@@ -4419,14 +4468,284 @@ async function seedGuide(){
   await Store.putFile(b.id,blob);await saveBook(b);books.push(b);
 }
 
+
+/* ================= tabs and split view =================
+   Every open book is a tab. A tab runs its own copy of the reader in a frame (index.html?tab=…&book=…),
+   so two books can be read side by side. The window around them (this page) keeps the shelf, sync and updates. */
+const EMBED=!!window.EMBED;
+const TAB_ICON={pdf:'#i-file',epub:'#i-book',docx:'#i-edit',xlsx:'#i-list',pptx:'#i-expand'};
+const Tabs={list:[],active:null,last:null,split:null,pick:null,imm:false,
+  get(id){return this.list.find(t=>t.id===id)},
+  byBook(bid){return this.list.find(t=>t.bookId===bid)},
+  has(bid){return !!this.byBook(bid)},
+  inSplit(id){return !!(this.split&&(this.split.a===id||this.split.b===id))},
+  save(){LS.set('tabs',{list:this.list.map(t=>({id:t.id,bookId:t.bookId})),split:this.split})},
+  restore(){
+    const s=LS.get('tabs',null);if(!s||!Array.isArray(s.list))return;
+    for(const t of s.list){const b=byId(t.bookId);if(b&&!this.byBook(b.id))this.list.push({id:t.id,bookId:t.bookId,frame:null,used:0})}
+    if(s.split&&this.get(s.split.a)&&this.get(s.split.b))this.split=s.split;
+    this.layout();
+  },
+  defDir(){const a=$('#tabArea');const w=(a&&a.clientWidth)||innerWidth;return w>=720?'h':'v'},
+  async open(b,opts={}){
+    if(!b)return;
+    if(b.cloud){if(!(await Sync.fetchBook(b)))return}
+    let t=this.byBook(b.id);
+    if(!t){try{await Sync.refreshOne(b)}catch(e){}t={id:'t'+uid(),bookId:b.id,frame:null,used:0};const i=this.list.findIndex(x=>x.id===(this.active||this.last));this.list.splice(i>=0?i+1:this.list.length,0,t)}
+    const pick=this.pick;if(pick)this.endPick();
+    const beside=(pick&&pick.with)||opts.beside;
+    if(beside&&beside!==t.id&&this.get(beside)){this.makeSplit(beside,t.id,pick&&pick.side==='left');return}
+    this.activate(t.id);
+  },
+  makeSplit(aId,bId,bFirst){
+    const a=this.get(aId),b=this.get(bId);if(!a||!b||a===b)return;
+    this.list.splice(this.list.indexOf(b),1);this.list.splice(this.list.indexOf(a)+(bFirst?0:1),0,b);
+    this.split={a:bFirst?bId:aId,b:bFirst?aId:bId,ratio:.5,dir:this.split&&this.split.dir||this.defDir()};
+    this.activate(bId);
+  },
+  exitSplit(){if(!this.split)return;const keep=this.active;this.split=null;this.activate(keep)},
+  swap(){if(!this.split)return;const s=this.split;this.split={...s,a:s.b,b:s.a,ratio:1-s.ratio};this.layout()},
+  turn(){if(!this.split)return;this.split.dir=this.split.dir==='h'?'v':'h';this.layout()},
+  activate(id){
+    const t=id&&this.get(id);if(!t){this.showShelf();return}
+    this.active=id;this.last=id;t.used=Date.now();this.ensure(t);
+    if(this.inSplit(id)){const o=this.get(this.split.a===id?this.split.b:this.split.a);if(o){o.used=Date.now();this.ensure(o)}}
+    this.trim();this.layout();
+    setTimeout(()=>{try{t.frame.contentWindow.focus()}catch(e){}},30);
+  },
+  focus(id){if(this.active!==id&&this.inSplit(id)&&this.inSplit(this.active)){this.active=id;this.last=id;this.layout()}},
+  ensure(t){
+    if(t.frame)return;const f=document.createElement('iframe');
+    f.setAttribute('allow','fullscreen; clipboard-write; autoplay');f.setAttribute('allowfullscreen','');
+    f.title=(byId(t.bookId)||{}).title||'Book';f.dataset.tab=t.id;
+    f.src=new URL('index.html?tab='+encodeURIComponent(t.id)+'&book='+encodeURIComponent(t.bookId),location.href).href;
+    $('#tabArea').appendChild(f);t.frame=f;
+  },
+  /* keeps memory in check: tabs not looked at for a while are put to sleep and reopen where you left off */
+  trim(){
+    const max=innerWidth<700?3:6;const live=this.list.filter(t=>t.frame);if(live.length<=max)return;
+    const keep=new Set([this.active,this.split&&this.split.a,this.split&&this.split.b]);
+    live.sort((x,y)=>x.used-y.used);
+    for(const t of live){if(this.list.filter(x=>x.frame).length<=max)break;if(keep.has(t.id))continue;this.sleep(t)}
+  },
+  sleep(t){if(!t.frame)return;let ok=true;try{const w=t.frame.contentWindow;if(w&&w.tabCanSleep)ok=w.tabCanSleep()}catch(e){}if(!ok)return;
+    try{const w=t.frame.contentWindow;if(w&&w.tabClose)w.tabClose(true)}catch(e){}t.frame.remove();t.frame=null},
+  async close(id){
+    const t=this.get(id);if(!t)return;
+    if(t.frame){let ok=true;try{const w=t.frame.contentWindow;if(w&&w.tabClose)ok=await w.tabClose(false)}catch(e){}if(!ok)return;t.frame.remove();t.frame=null}
+    const i=this.list.indexOf(t);this.list.splice(i,1);
+    let next=null;
+    if(this.inSplit(id)){next=this.split.a===id?this.split.b:this.split.a;this.split=null;if(this.active!==id)next=this.active}
+    else if(this.active===id){const n=this.list[i]||this.list[i-1];next=n?n.id:null}
+    else next=this.active;
+    if(next)this.activate(next);else this.showShelf();
+  },
+  closeOthers(id){for(const t of [...this.list])if(t.id!==id){if(t.frame){try{const w=t.frame.contentWindow;if(w&&w.tabCanSleep&&!w.tabCanSleep())continue}catch(e){}}this.close(t.id)}},
+  dropBook(bid){const t=this.byBook(bid);if(!t)return;if(t.frame){t.frame.remove();t.frame=null}const id=t.id;this.list.splice(this.list.indexOf(t),1);
+    if(this.inSplit(id))this.split=null;if(this.active===id){this.active=null;this.layout()}else this.layout()},
+  showShelf(){this.active=null;this.layout();renderShelf()},
+  immersive(id,on){if(id!==this.active)return;on=!!on&&!this.inSplit(id)&&innerWidth<700;if(on!==this.imm){this.imm=on;document.body.classList.toggle('tabs-imm',on)}},
+  layout(){
+    const has=this.list.length>0;document.body.classList.toggle('hastabs',has);
+    const area=$('#tabArea');const shelf=!this.active;
+    area.hidden=shelf;$('#app').hidden=!shelf;if(shelf){document.body.classList.remove('tabs-imm');this.imm=false}
+    const sp=!shelf&&this.inSplit(this.active)?this.split:null;
+    for(const t of this.list){if(!t.frame)continue;const f=t.frame;let st=null;
+      if(sp&&(t.id===sp.a||t.id===sp.b)){const r=sp.ratio*100,first=t.id===sp.a;
+        st=sp.dir==='h'?(first?{left:'0',top:'0',width:`calc(${r}% - 3px)`,height:'100%'}:{left:`calc(${r}% + 3px)`,top:'0',width:`calc(${100-r}% - 3px)`,height:'100%'})
+                       :(first?{left:'0',top:'0',width:'100%',height:`calc(${r}% - 3px)`}:{left:'0',top:`calc(${r}% + 3px)`,width:'100%',height:`calc(${100-r}% - 3px)`})}
+      else if(t.id===this.active)st={left:'0',top:'0',width:'100%',height:'100%'};
+      if(st){Object.assign(f.style,st,{visibility:'visible',pointerEvents:'',zIndex:'1'})}else Object.assign(f.style,{visibility:'hidden',pointerEvents:'none',zIndex:'0'});
+      f.classList.toggle('tpane',!!sp&&(t.id===sp.a||t.id===sp.b));f.classList.toggle('tfocus',!!sp&&t.id===this.active);
+    }
+    const dv=$('#tabDiv');dv.hidden=!sp;
+    if(sp){dv.className=sp.dir==='h'?'h':'v';if(sp.dir==='h')Object.assign(dv.style,{left:`calc(${sp.ratio*100}% - 6px)`,top:'0',width:'12px',height:'100%'});else Object.assign(dv.style,{top:`calc(${sp.ratio*100}% - 6px)`,left:'0',height:'12px',width:'100%'})}
+    this.renderBar();this.save();
+  },
+  renderBar(){
+    const bar=$('#tabbar');if(!bar)return;bar.hidden=!this.list.length;if(!this.list.length){bar.innerHTML='';return}
+    const sp=this.split;
+    const tab=t=>{const b=byId(t.bookId)||{};const on=t.id===this.active,grp=sp&&(t.id===sp.a||t.id===sp.b);
+      return `<div class="tab${on?' ton':''}${grp?' tgrp':''}${grp&&t.id===sp.a?' tga':''}${grp&&t.id===sp.b?' tgb':''}${t.frame?'':' tsleep'}" data-tab="${t.id}" role="tab" aria-selected="${on}" title="${esc(b.title||'')}"><svg class="i"><use href="${TAB_ICON[b.format]||'#i-book'}"/></svg><span>${esc(b.title||'Book')}</span><button class="ttx" data-tx="${t.id}" aria-label="Close ${esc(b.title||'tab')}"><svg class="i"><use href="#i-x"/></svg></button></div>`};
+    bar.innerHTML=`<button class="tth${this.active?'':' ton'}" data-th aria-label="Shelf" title="Shelf"><svg class="i" viewBox="0 0 24 24"><path d="M4 4v16M10 4v16M15 5l4 15M3 20h18"/></svg></button><div class="tbtabs" role="tablist">${this.list.map(tab).join('')}</div>`+
+      `<button class="tts${sp&&this.inSplit(this.active)?' ton':''}" data-ts aria-label="Split view" title="Split view (Ctrl+\\)"${this.active?'':' disabled'}><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/></svg></button>`;
+    const on=bar.querySelector('.tab.ton');if(on)on.scrollIntoView({block:'nearest',inline:'nearest'});
+  },
+  /* the split menu: which book goes beside this one, and how the two are arranged */
+  splitMenu(id){
+    id=id||this.active;const t=this.get(id);if(!t){toast('Open a book first');return}
+    const tb=byId(t.bookId)||{};const inS=this.inSplit(id);
+    const others=this.list.filter(x=>x.id!==id);
+    const body=sheet(`<h2>Split view</h2><p class="muted" style="margin:0">${inS?'Two books side by side. Drag the bar between them to resize.':`Read “${esc(tb.title||'this book')}” beside another book.`}</p>
+      <div class="menu">${inS?`<button data-sm="swap"><svg class="i"><use href="#i-rot"/></svg><span>Swap sides</span></button>
+        <button data-sm="turn"><svg class="i"><use href="#i-expand"/></svg><span>${this.split.dir==='h'?'Top and bottom':'Side by side'}<small>Change how the two books are arranged</small></span></button>
+        <button data-sm="even"><svg class="i"><use href="#i-fit"/></svg><span>Make both halves equal</span></button>
+        <button data-sm="exit"><svg class="i"><use href="#i-x"/></svg><span>Exit split view<small>Both books stay open as tabs</small></span></button>`:
+        others.map(o=>{const ob=byId(o.bookId)||{};return `<button data-sw="${o.id}"><svg class="i"><use href="${TAB_ICON[ob.format]||'#i-book'}"/></svg><span>${esc(ob.title||'Book')}<small>Open tab</small></span></button>`}).join('')+
+        `<button data-sm="pick"><svg class="i"><use href="#i-plus"/></svg><span>Another book from the shelf…</span></button>`}</div>
+      <div class="mact"><button class="btn" data-a="x">Close</button></div>`);
+    body.onclick=e=>{const w=e.target.closest('[data-sw]');if(w){closeSheet();this.makeSplit(id,w.dataset.sw);return}
+      const m=e.target.closest('[data-sm]');if(m){closeSheet();const k=m.dataset.sm;
+        if(k==='swap')this.swap();else if(k==='turn')this.turn();else if(k==='even'){this.split.ratio=.5;this.layout()}else if(k==='exit')this.exitSplit();else if(k==='pick')this.startPick(id);return}
+      if(e.target.closest('[data-a]'))closeSheet()};
+  },
+  tabMenu(id){
+    const t=this.get(id);if(!t)return;const b=byId(t.bookId)||{};const inS=this.inSplit(id);
+    const body=sheet(`<h2>${esc(b.title||'Tab')}</h2><div class="menu">
+      ${inS?`<button data-tm="exit"><svg class="i"><use href="#i-x"/></svg><span>Exit split view</span></button><button data-tm="swap"><svg class="i"><use href="#i-rot"/></svg><span>Swap sides</span></button>`
+           :`<button data-tm="split"><svg class="i"><use href="#i-expand"/></svg><span>Split view with…</span></button>`}
+      <button data-tm="close"><svg class="i"><use href="#i-x"/></svg><span>Close tab</span></button>
+      ${this.list.length>1?`<button data-tm="others"><svg class="i"><use href="#i-x"/></svg><span>Close other tabs</span></button>`:''}
+      </div><div class="mact"><button class="btn" data-a="x">Cancel</button></div>`);
+    body.onclick=e=>{const m=e.target.closest('[data-tm]');if(m){closeSheet();const k=m.dataset.tm;
+        if(k==='exit')this.exitSplit();else if(k==='swap')this.swap();else if(k==='split')this.splitMenu(id);else if(k==='close')this.close(id);else if(k==='others')this.closeOthers(id);return}
+      if(e.target.closest('[data-a]'))closeSheet()};
+  },
+  startPick(withId,side){
+    this.pick={with:withId,side:side||'right'};const b=byId((this.get(withId)||{}).bookId)||{};
+    this.active=null;this.layout();renderShelf();
+    let bn=$('#pickBanner');if(!bn){bn=document.createElement('div');bn.id='pickBanner';$('#app').prepend(bn)}
+    bn.innerHTML=`<span>Choose a book to open beside <b>${esc(b.title||'your book')}</b></span><button class="btn" data-pk="x">Cancel</button>`;
+    bn.onclick=e=>{if(e.target.closest('[data-pk]')){this.endPick();this.activate(withId)}};
+  },
+  endPick(){this.pick=null;const bn=$('#pickBanner');if(bn)bn.remove()},
+  key(k){
+    if(k==='close'){if(this.active)this.close(this.active);return}
+    if(k==='split'){this.splitMenu();return}
+    if(!this.list.length)return;const ids=this.list.map(t=>t.id);let i=ids.indexOf(this.active);
+    i=i<0?(k==='next'?0:ids.length-1):(i+(k==='next'?1:-1)+ids.length)%ids.length;this.activate(ids[i]);
+  }
+};
+function tabKeyOf(e){
+  if(!(e.ctrlKey||e.metaKey)||e.altKey)return null;
+  if(e.key==='Tab')return e.shiftKey?'prev':'next';if(e.key==='PageDown')return 'next';if(e.key==='PageUp')return 'prev';
+  if(!e.shiftKey&&(e.key==='w'||e.key==='W'))return 'close';if(e.key==='\\')return 'split';return null;
+}
+
+if(!EMBED){
+  window.__tabsHas=bid=>Tabs.has(bid);
+  window.__shelf={books:()=>books,BS,
+    Sync:{touch:(b,f)=>{try{Sync.touch(b,f)}catch(e){}renderShelfSoon()},queueUpload:b=>Sync.queueUpload(b),fetchBook:b=>Sync.fetchBook(b)},
+    open:(b,o)=>Tabs.open(b,o),toShelf:()=>Tabs.showShelf(),focus:id=>Tabs.focus(id),immersive:(id,on)=>Tabs.immersive(id,on),key:k=>Tabs.key(k),gone:id=>Tabs.dropBook((Tabs.get(id)||{}).bookId),
+    split:(id)=>Tabs.splitMenu(id)};
+  /* every way of opening a book now opens (or switches to) a tab */
+  openBook=function(b,opts){return Tabs.open(b,opts)};
+  const _rsh=renderShelf;renderShelf=function(){_rsh.apply(this,arguments);Tabs.renderBar()};
+  const _ref=refreshOpenAnns;refreshOpenAnns=function(b){_ref(b);for(const t of Tabs.list)if(t.frame&&b&&t.bookId===b.id){try{t.frame.contentWindow.refreshOpenAnns(b)}catch(e){}}};
+  const _del=Store.delBook.bind(Store);Store.delBook=async id=>{Tabs.dropBook(id);return _del(id)};
+  const _back=window.bookshelfBack;
+  window.bookshelfBack=function(){
+    if(!$('#modal').hidden||!$('#drawer').hidden)return _back();
+    if(Tabs.active){const t=Tabs.get(Tabs.active);try{if(t&&t.frame&&t.frame.contentWindow.bookshelfBack())return true}catch(e){}Tabs.showShelf();return true}
+    if(Tabs.pick){const w=Tabs.pick.with;Tabs.endPick();Tabs.activate(w);return true}
+    return _back();
+  };
+  document.addEventListener('keydown',e=>{const k=tabKeyOf(e);if(k&&(Tabs.list.length||k!=='close')){e.preventDefault();e.stopImmediatePropagation();Tabs.key(k)}},true);
+  if(window.electronAPI&&window.electronAPI.onTabKey)window.electronAPI.onTabKey(k=>Tabs.key(k));
+
+  /* tab strip: tap, close, long-press or right-click for the menu, drag to reorder or into the page to split */
+  const bar=$('#tabbar');
+  bar.addEventListener('click',e=>{
+    if(Date.now()-(Tabs.dragEnd||0)<300)return;
+    const x=e.target.closest('[data-tx]');if(x){e.stopPropagation();Tabs.close(x.dataset.tx);return}
+    if(e.target.closest('[data-th]')){Tabs.endPick();Tabs.showShelf();return}
+    if(e.target.closest('[data-ts]')){Tabs.splitMenu();return}
+    const t=e.target.closest('[data-tab]');if(t)Tabs.activate(t.dataset.tab);
+  });
+  bar.addEventListener('contextmenu',e=>{const t=e.target.closest('[data-tab]');if(t){e.preventDefault();if(Date.now()-(Tabs.dragEnd||0)<900)return;Tabs.dragEnd=Date.now();Tabs.tabMenu(t.dataset.tab)}});
+  bar.addEventListener('auxclick',e=>{if(e.button===1){const t=e.target.closest('[data-tab]');if(t){e.preventDefault();Tabs.close(t.dataset.tab)}}});
+  let dg=null;
+  bar.addEventListener('pointerdown',e=>{
+    const t=e.target.closest('[data-tab]');if(!t||e.target.closest('[data-tx]')||e.button>0)return;
+    dg={id:t.dataset.tab,x:e.clientX,y:e.clientY,el:t,on:false,mode:null,pid:e.pointerId,lp:setTimeout(()=>{if(dg&&!dg.on){const id=dg.id;dg=null;Tabs.dragEnd=Date.now();Tabs.tabMenu(id)}},e.pointerType==='touch'?550:100000)};
+  });
+  window.addEventListener('pointermove',e=>{
+    if(!dg||e.pointerId!==dg.pid)return;const dx=e.clientX-dg.x,dy=e.clientY-dg.y;
+    if(!dg.on){if(Math.hypot(dx,dy)<9)return;clearTimeout(dg.lp);if(e.pointerType==='touch'&&Math.abs(dx)>Math.abs(dy)&&!dg.forced){dg=null;return}dg.on=true;$('#tabShield').hidden=false;dg.el.classList.add('tdrag')}
+    const br=bar.getBoundingClientRect();const area=$('#tabArea');const sh=$('#tabShield');
+    if(e.clientY>br.bottom+24&&Tabs.active&&!area.hidden){
+      const ar=area.getBoundingClientRect();const dir=Tabs.defDir();const second=dir==='h'?e.clientX>ar.left+ar.width/2:e.clientY>ar.top+ar.height/2;
+      dg.mode=second?'b':'a';sh.className='drop '+dir+' '+dg.mode;dg.el.style.transform='';
+    }else{dg.mode='move';sh.className='';dg.el.style.transform=`translateX(${dx}px)`}
+  });
+  const endDrag=e=>{
+    if(!dg||(e&&e.pointerId!==dg.pid))return;clearTimeout(dg.lp);const d=dg;dg=null;
+    $('#tabShield').hidden=true;$('#tabShield').className='';if(!d.on)return;
+    Tabs.dragEnd=Date.now();d.el.classList.remove('tdrag');d.el.style.transform='';
+    if(d.mode==='a'||d.mode==='b'){
+      let other=Tabs.active!==d.id?Tabs.active:null;
+      if(!other){const o=Tabs.list.filter(t=>t.id!==d.id).sort((x,y)=>y.used-x.used)[0];other=o&&o.id}
+      if(!other){toast('Open a second book to use split view');return}
+      if(Tabs.inSplit(d.id))Tabs.split=null;
+      Tabs.makeSplit(other,d.id,d.mode==='a');return}
+    const tabs=[...bar.querySelectorAll('[data-tab]')];const x=e?e.clientX:0;
+    let to=tabs.findIndex(el=>{const r=el.getBoundingClientRect();return x<r.left+r.width/2});if(to<0)to=tabs.length;
+    const from=Tabs.list.findIndex(t=>t.id===d.id);const [t]=Tabs.list.splice(from,1);if(to>from)to--;Tabs.list.splice(to,0,t);Tabs.layout();
+  };
+  window.addEventListener('pointerup',endDrag);window.addEventListener('pointercancel',e=>{if(dg&&dg.on)endDrag(e);else if(dg){clearTimeout(dg.lp);dg=null}});
+
+  /* the bar between two books */
+  const dv=$('#tabDiv');let rz=null;
+  dv.addEventListener('pointerdown',e=>{if(!Tabs.split)return;e.preventDefault();rz={pid:e.pointerId};$('#tabShield').hidden=false;$('#tabShield').className='rz';try{dv.setPointerCapture(e.pointerId)}catch(x){}});
+  dv.addEventListener('pointermove',e=>{if(!rz||!Tabs.split)return;const ar=$('#tabArea').getBoundingClientRect();const s=Tabs.split;
+    s.ratio=clamp(s.dir==='h'?(e.clientX-ar.left)/ar.width:(e.clientY-ar.top)/ar.height,.18,.82);
+    if(s.dir==='h')dv.style.left=`calc(${s.ratio*100}% - 6px)`;else dv.style.top=`calc(${s.ratio*100}% - 6px)`;
+    cancelAnimationFrame(rz.raf);rz.raf=requestAnimationFrame(()=>Tabs.layout())});
+  const rzEnd=()=>{if(!rz)return;rz=null;$('#tabShield').hidden=true;$('#tabShield').className='';Tabs.layout()};
+  dv.addEventListener('pointerup',rzEnd);dv.addEventListener('pointercancel',rzEnd);
+  dv.addEventListener('dblclick',()=>{if(Tabs.split){Tabs.split.ratio=.5;Tabs.layout()}});
+  window.addEventListener('resize',()=>{if(Tabs.list.length)Tabs.renderBar()});
+}
+
+/* ---------- inside a tab ---------- */
+if(EMBED){
+  const sh=window.parent.__shelf,q=new URLSearchParams(location.search);
+  window.TAB_ID=q.get('tab');window.TAB_BOOK=q.get('book');
+  renderShelf=function(){};renderShelfSoon=function(){};enterReaderHistory=function(){};
+  openBook=function(b,o){return sh.open(b,o)};
+  Sync.touch=(b,f)=>sh.Sync.touch(b,f);Sync.queueUpload=b=>sh.Sync.queueUpload(b);Sync.fetchBook=b=>sh.Sync.fetchBook(b);Sync.refreshOne=async()=>{};Sync.start=()=>{};
+  goShelf=async function(){
+    if(!$('#present').hidden){closePresent();return}
+    closeDict();closeDrawer();closeSheet();try{if(document.fullscreenElement)document.exitFullscreen()}catch(e){}
+    sh.toShelf(TAB_ID);
+  };
+  window.tabCanSleep=function(){return !(O.book&&O.dirty)&&!(typeof TTS!=='undefined'&&TTS.on)};
+  window.tabClose=async function(force){
+    if(O.book&&O.dirty&&!force){const r=await askUnsaved();if(r!=='go')return false;O.dirty=false}
+    try{if(typeof TTS!=='undefined'&&TTS.on)closeTts()}catch(e){}
+    try{if(O.book)closeOffice();if(R)closeEpub();if(P.doc||!$('#pdf').hidden)closePdf(true)}catch(e){console.warn(e)}
+    return true;
+  };
+  document.addEventListener('pointerdown',()=>sh.focus(TAB_ID),true);
+  window.addEventListener('focus',()=>sh.focus(TAB_ID));
+  document.addEventListener('keydown',e=>{const k=tabKeyOf(e);if(k){e.preventDefault();e.stopImmediatePropagation();sh.key(k)}},true);
+  window.addEventListener('storage',e=>{
+    if(e.key==='kg.rs'){try{rs=Object.assign({},RS_DEF,LS.get('rs',{}))}catch(x){}}
+    if(e.key==='kg.keys'&&typeof keyMap!=='undefined')keyMap=null;
+  });
+  const mo=new MutationObserver(()=>{const r=['#epub','#pdf','#office'].map(s=>$(s)).find(x=>x&&!x.hidden);sh.immersive(TAB_ID,!!(r&&r.classList.contains('hidebars')))});
+  for(const s of ['#epub','#pdf','#office'])mo.observe($(s),{attributes:true,attributeFilter:['class','hidden']});
+}
+async function embedBoot(){
+  const sh=window.parent.__shelf;
+  applyRS();await Store.init();
+  books=sh.books();
+  BS.native=sh.BS.native;BS.version=sh.BS.version;
+  const b=books.find(x=>x.id===TAB_BOOK);
+  if(!b){sh.gone(TAB_ID);return}
+  b.openedAt=Date.now();saveBook(b);
+  if(isOffice(b))openOffice(b);else if(b.format==='pdf')openPdf(b);else openEpub(b);
+}
+
 /* ================= boot ================= */
 (async function boot(){
+  if(window.EMBED){await embedBoot();return}
   try{if(location.hash==='#reader')history.replaceState(null,'',location.href.split('#')[0])}catch(e){}
   applyRS();
   await Store.init();
   books=await Store.allBooks();
   if(!books.length&&!LS.get('seeded',false)){try{await seedGuide();LS.set('seeded',true)}catch(e){console.warn(e)}}
-  renderShelf();
+  renderShelf();Tabs.restore();
   setTimeout(()=>scanShelfForFileAnnotations(),3000);setTimeout(()=>{mergeDupesSoon();fillFingerprints()},9000);
   if(!Store.db)toast('This view can’t keep books after you close it. Open Book Shelf in a browser to keep your shelf.');
   Sync.start();
