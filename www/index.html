@@ -8,28 +8,23 @@
 <style>
 /* Layout: a reading-room wall with walnut shelves; readers open as full-screen layers above it. */
 :root{
-  --wall:#E3E6DC; --wall-2:#D8DCCF; --ink:#1E2621; --ink-2:#58635C; --line:#C5CBBC;
-  --panel:#F7F7F2; --panel-2:#EDEEE6; --brass:#8F6420; --brass-ink:#FFFDF7;
-  --wood-1:#7B4F2E; --wood-2:#5A3820; --wood-edge:#A0704A; --shadow:rgba(40,30,15,.35);
-  --danger:#A83A2C; --ok:#2F7A4F; --page:#FFFFFF; --pdf-bg:#CDD1C6;
-  --f-display:"Young Serif", Georgia, "Times New Roman", serif;
-  --f-ui:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --r-bg:#FBFAF6; --r-fg:#24221F; --r-muted:#6E6A62; --r-bar:rgba(251,250,246,.94); --r-rule:#E2DED4; --r-accent:#8F6420; --r-chip:#EFECE4;
+  --wall:#12161F; --wall-2:#0D1017; --ink:#ECE6D8; --ink-2:#A3ABBC; --line:#2A3142;
+  --panel:#1B2232; --panel-2:#222A3C; --brass:#E0A84F; --brass-ink:#1A1206;
+  --wood-1:#2A3142; --wood-2:#1D2332; --wood-edge:#3B4560; --shadow:rgba(0,0,0,.55); --glow:rgba(224,168,79,.20);
+  --danger:#F08A73; --ok:#7CCB9A; --page:#FFFFFF; --pdf-bg:#0B0E14;
+  --f-display:"Fraunces", Georgia, "Times New Roman", serif;
+  --f-ui:"Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --r-bg:#151A24; --r-fg:#DCD6C8; --r-muted:#8E96A8; --r-bar:rgba(21,26,36,.94); --r-rule:#2A3142; --r-accent:#E0A84F; --r-chip:#222A3C;
+  color-scheme:dark;
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --wall:#131B18; --wall-2:#18221E; --ink:#E6E4DA; --ink-2:#9CA69F; --line:#2B3732;
-  --panel:#1C2622; --panel-2:#222E29; --brass:#D4A55A; --brass-ink:#1B1407;
-  --wood-1:#4B301C; --wood-2:#311F10; --wood-edge:#6E482B; --shadow:rgba(0,0,0,.6);
-  --danger:#E3735F; --ok:#6CC18F; --page:#FFFFFF; --pdf-bg:#0F1513;
-  --r-bg:#1A1C1F; --r-fg:#CBC8C0; --r-muted:#8A8780; --r-bar:rgba(26,28,31,.94); --r-rule:#2E3136; --r-accent:#D4A55A; --r-chip:#25282C;
-  color-scheme:dark}}
-:root[data-theme="dark"]{
-  --wall:#131B18; --wall-2:#18221E; --ink:#E6E4DA; --ink-2:#9CA69F; --line:#2B3732;
-  --panel:#1C2622; --panel-2:#222E29; --brass:#D4A55A; --brass-ink:#1B1407;
-  --wood-1:#4B301C; --wood-2:#311F10; --wood-edge:#6E482B; --shadow:rgba(0,0,0,.6);
-  --danger:#E3735F; --ok:#6CC18F; --page:#FFFFFF; --pdf-bg:#0F1513;
-  --r-bg:#1A1C1F; --r-fg:#CBC8C0; --r-muted:#8A8780; --r-bar:rgba(26,28,31,.94); --r-rule:#2E3136; --r-accent:#D4A55A; --r-chip:#25282C;
-  color-scheme:dark}
+:root[data-theme="light"]{
+  --wall:#EDEAE2; --wall-2:#E2DED3; --ink:#161B26; --ink-2:#535B6C; --line:#CFCABD;
+  --panel:#FAF8F3; --panel-2:#F0EDE5; --brass:#94600F; --brass-ink:#FFFDF7;
+  --wood-1:#3A4358; --wood-2:#262D3D; --wood-edge:#56607A; --shadow:rgba(20,25,40,.30); --glow:rgba(148,96,15,.10);
+  --danger:#A83A2C; --ok:#2F7A4F; --page:#FFFFFF; --pdf-bg:#D3D0C6;
+  --r-bg:#FBFAF6; --r-fg:#24221F; --r-muted:#6E6A62; --r-bar:rgba(251,250,246,.94); --r-rule:#E2DED4; --r-accent:#94600F; --r-chip:#EFECE4;
+  color-scheme:light;
+}
 *{box-sizing:border-box}
 html,body{height:100%}
 body{background:var(--wall);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent}
@@ -53,7 +48,7 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 #app{max-width:1180px;margin:0 auto;padding-block:20px 72px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px}
 .brand{display:flex;align-items:center;gap:12px;min-width:0}
-.mark{width:46px;height:46px;border-radius:14px;background:linear-gradient(150deg,#3E6B4C,#24432F);color:#F3E3B8;display:grid;place-items:center;box-shadow:inset 0 -3px 0 rgba(0,0,0,.22),0 4px 10px -4px rgba(0,0,0,.4)}
+.mark{width:46px;height:46px;border-radius:13px;display:block;box-shadow:0 4px 12px -4px rgba(0,0,0,.45);overflow:hidden}.mark svg{display:block;width:46px;height:46px}
 .brand h1{font-family:var(--f-display);font-weight:400;font-size:28px;line-height:1.1;margin:0;letter-spacing:.2px}
 .brand p{margin:2px 0 0;color:var(--ink-2);font-size:13px}
 .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
@@ -75,7 +70,7 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 #shelves{--bw:124px;--gap:26px;position:relative;margin-top:10px;padding:8px 0 0;border-radius:18px;background:radial-gradient(120% 60% at 50% 0%,color-mix(in srgb,var(--brass) 14%,transparent),transparent 70%)}
 .shelf{padding-top:30px}
 .row{display:flex;gap:var(--gap);align-items:flex-end;padding:0 22px;min-height:calc(var(--bw)*1.5)}
-.plank{position:relative;height:20px;margin:0 2px;border-radius:3px;background:linear-gradient(180deg,var(--wood-edge) 0 3px,var(--wood-1) 3px 55%,var(--wood-2));box-shadow:0 14px 16px -8px var(--shadow),inset 0 -2px 0 rgba(0,0,0,.22)}
+.plank{position:relative;height:20px;margin:0 2px;border-radius:3px;background:linear-gradient(180deg,var(--wood-edge) 0 3px,var(--wood-1) 3px 55%,var(--wood-2));box-shadow:0 14px 16px -8px var(--shadow),0 -16px 34px -12px var(--glow),inset 0 -2px 0 rgba(0,0,0,.22)}
 .plank::before{content:"";position:absolute;left:0;right:0;top:-10px;height:10px;background:linear-gradient(0deg,rgba(0,0,0,.14),transparent)}
 .labels{display:flex;gap:var(--gap);padding:8px 22px 0}
 .labels span{width:var(--bw);font-size:12px;line-height:1.3;color:var(--ink-2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex:none}
@@ -515,7 +510,7 @@ body.tts-open .pages{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 340px
 <div id="tabbar" hidden></div><div id="tabArea" hidden><div id="tabDiv" hidden></div></div><div id="tabShield" hidden></div>
 <div id="app">
   <header class="top">
-    <div class="brand"><span class="mark" aria-hidden="true"><svg viewBox="0 0 32 32" width="30" height="30"><path d="M16 9.5c-2.6-2-6.3-2.6-10-1.9v15.2c3.7-.7 7.4-.1 10 1.9 2.6-2 6.3-2.6 10-1.9V7.6c-3.7-.7-7.4-.1-10 1.9z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M16 9.5v15.2" stroke="currentColor" stroke-width="1.9"/><path d="M19.5 13.8c1.6-1.9 3.4-2.6 4.6-2.7-.2 2.6-1.8 4.6-4.6 5.1" fill="currentColor" opacity=".85"/></svg></span><div><h1>Book Shelf</h1><p id="stat">Your reading room</p></div></div>
+    <div class="brand"><span class="mark" aria-hidden="true"><svg viewBox="0 0 100 100"><rect width="100" height="100" rx="23" fill="#1B2232"/><circle cx="62" cy="34" r="15" fill="#E0A84F"/><circle cx="68" cy="29" r="13" fill="#1B2232"/><rect x="24" y="44" width="11" height="34" rx="2" fill="#ECE6D8"/><rect x="38" y="50" width="11" height="28" rx="2" fill="#E0A84F"/><rect x="52" y="47" width="11" height="31" rx="2" fill="#7D879C" transform="rotate(10 57 78)"/><rect x="20" y="78" width="60" height="4" rx="2" fill="#ECE6D8"/></svg></span><div><h1>Book Shelf</h1><p id="stat">Your reading room</p></div></div>
     <div class="actions">
       <label class="search"><svg class="i"><use href="#i-search"/></svg><input id="q" type="search" placeholder="Search your shelf" aria-label="Search your shelf"></label>
       <button class="sync" id="syncBtn" data-s="off" aria-label="Sync status"><i></i><span id="syncTxt">Sync</span></button>
@@ -664,6 +659,7 @@ body.tts-open .pages{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 340px
 </div>
 <div class="drop" id="drop" hidden>Drop PDF or EPUB files to add them</div>
 
+<script>(function(){var l='dark';try{l=JSON.parse(localStorage.getItem('kg.look')||'"dark"')}catch(e){}if(l==='system')l=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';document.documentElement.setAttribute('data-theme',l==='light'?'light':'dark')})();</script>
 <script>window.EMBED=(function(){try{return window.parent!==window&&/[?&]tab=/.test(location.search)&&!!window.parent.__shelf}catch(e){return false}})();
 if(window.EMBED){document.documentElement.classList.add('embed');try{window.Capacitor=window.parent.Capacitor;if(window.parent.electronAPI)window.electronAPI=window.parent.electronAPI}catch(e){}}
 else document.write('<script src="lib/capacitor.js"><\/script>');</script>
@@ -3490,13 +3486,14 @@ function appMenu(){
     <button data-m="sync"><svg class="i"><use href="#i-rot"/></svg><span>Sync between devices<small>${Sync.on?'Connected':'Set up with a private GitHub repository'}</small></span></button>
     <button data-m="tools"><svg class="i"><use href="#i-file"/></svg><span>PDF tools<small>Merge PDFs, pictures to PDF</small></span></button>
     <button data-m="dict"><svg class="i"><use href="#i-search"/></svg><span>Dictionary<small>Works offline</small></span></button>
+    <button data-m="look"><svg class="i"><use href="#i-eye"/></svg><span>Appearance<small>${({dark:'Dark',light:'Light',system:'Follows your device'})[LS.get('look','dark')]||'Dark'}</small></span></button>
     <button data-m="keys"><svg class="i"><use href="#i-pen"/></svg><span>Keyboard shortcuts<small>See and change them</small></span></button>
     <button data-m="imp"><svg class="i"><use href="#i-mark"/></svg><span>Import from Shelfmark<small>Bring in highlights, notes, bookmarks and reading places</small></span></button>
     <button data-m="about"><svg class="i"><use href="#i-book"/></svg><span>About and credits</span></button>
    </div><div class="mact"><button class="btn" data-a="x">Close</button></div>`);
   b.onclick=e=>{const a=e.target.closest('[data-m],[data-a]');if(!a)return;const m=a.dataset.m;
     if(!m){closeSheet();return}
-    if(m==='keys'){keysSheet();return}if(m==='upd'){Upd.settings();return}else if(m==='imp'){closeSheet();importShelfmark()}else if(m==='sync')syncSheet();else if(m==='tools')shelfPdfTools();else if(m==='dict'){closeSheet();openDict();setTimeout(()=>$('#dictQ').focus(),60)}
+    if(m==='look'){lookSheet();return}if(m==='keys'){keysSheet();return}if(m==='upd'){Upd.settings();return}else if(m==='imp'){closeSheet();importShelfmark()}else if(m==='sync')syncSheet();else if(m==='tools')shelfPdfTools();else if(m==='dict'){closeSheet();openDict();setTimeout(()=>$('#dictQ').focus(),60)}
     else if(m==='about')sheet(`<h2>About Book Shelf</h2><p class="muted">Your personal reader for PDF, EPUB, Word, Excel and PowerPoint files.</p><p class="muted" style="font-size:13px">Dictionary: Open English WordNet 2024 (CC BY 4.0), globalwordnet.github.io. PDF rendering: PDF.js. Editing: pdf-lib, SheetJS, mammoth, docx-preview, JSZip.</p><div class="mact"><button class="btn primary" data-a="x">OK</button></div>`).onclick=ev=>{if(ev.target.closest('[data-a]'))closeSheet()}};
 }
 
@@ -4052,6 +4049,21 @@ function imgAnnSheet(book,a){
 }
 
 
+
+/* ---------- appearance: dark (default), light, or follow the device ---------- */
+function applyLook(){
+  let l=LS.get('look','dark');if(l==='system')l=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
+  document.documentElement.setAttribute('data-theme',l==='light'?'light':'dark');
+}
+matchMedia('(prefers-color-scheme: light)').addEventListener('change',()=>{if(LS.get('look','dark')==='system')applyLook()});
+window.addEventListener('storage',e=>{if(e.key==='kg.look')applyLook()});
+function lookSheet(){
+  const cur=LS.get('look','dark');
+  const opt=(k,l,d)=>`<button data-lk="${k}" aria-pressed="${cur===k}">${cur===k?'<svg class="i" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>':'<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>'}<span>${l}<small>${d}</small></span></button>`;
+  const b=sheet(`<h2>Appearance</h2><div class="menu">${opt('dark','Dark','Midnight navy with a warm lamp glow')}${opt('light','Light','Warm paper with navy ink')}${opt('system','Follow my device','Dark at night, light by day, as your phone or Windows is set')}</div>
+    <p class="muted" style="font-size:13px">Book pages keep their own colours: change those in a book’s Aa settings.</p><div class="mact"><button class="btn primary" data-a="x">Done</button></div>`);
+  b.onclick=e=>{const k=e.target.closest('[data-lk]');if(k){LS.set('look',k.dataset.lk);applyLook();lookSheet();return}if(e.target.closest('[data-a]'))closeSheet()};
+}
 /* ---------- selected item, Delete key and keyboard shortcuts ---------- */
 var ASEL=null,lastDeleted=null;
 function isAsel(a){return !!(ASEL&&ASEL.a.id===a.id)}

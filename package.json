@@ -23,6 +23,8 @@
     "@capacitor/core": "6.1.2",
     "@fontsource/atkinson-hyperlegible": "^5.0.0",
     "@fontsource/figtree": "^5.0.0",
+    "@fontsource/fraunces": "^5.0.0",
+    "@fontsource/manrope": "^5.0.0",
     "@fontsource/literata": "^5.0.0",
     "@fontsource/noto-naskh-arabic": "^5.0.0",
     "@fontsource/noto-nastaliq-urdu": "^5.0.0",

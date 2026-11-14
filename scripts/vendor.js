@@ -24,7 +24,7 @@ copyFirst('mammoth.browser.min.js', ['mammoth/mammoth.browser.min.js', 'mammoth/
 copyFirst('docx-preview.min.js', ['docx-preview/dist/docx-preview.min.js', 'docx-preview/dist/docx-preview.js']);
 
 const fonts = {
-  'young-serif': ['400'], figtree: ['400', '500', '600', '700'], literata: ['400', '600', '400-italic'],
+  'young-serif': ['400'], fraunces: ['400', '600'], manrope: ['400', '500', '600', '700'], figtree: ['400', '500', '600', '700'], literata: ['400', '600', '400-italic'],
   'source-serif-4': ['400', '600', '400-italic'], 'atkinson-hyperlegible': ['400', '700', '400-italic'],
   'noto-naskh-arabic': ['400', '600'], 'noto-nastaliq-urdu': ['400', '600']
 };

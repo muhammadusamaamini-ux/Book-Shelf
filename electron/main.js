@@ -48,7 +48,7 @@ if (!app.requestSingleInstanceLock()) {
 function createWindow() {
   win = new BrowserWindow({
     width: 1240, height: 860, minWidth: 380, minHeight: 500,
-    title: 'Book Shelf', backgroundColor: '#E3E6DC', autoHideMenuBar: true,
+    title: 'Book Shelf', backgroundColor: '#12161F', autoHideMenuBar: true,
     icon: path.join(__dirname, '..', 'assets', 'icon.png'),
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, sandbox: true, spellcheck: true }
   });
