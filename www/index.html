@@ -410,6 +410,15 @@ body.tts-open .pages{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 340px
 .oload{padding:40px 20px;text-align:center;color:var(--r-muted)}
 .office .wview,.office .wedit,.office .pview{padding:16px max(8px,env(safe-area-inset-left,0px)) calc(env(safe-area-inset-bottom,0px) + 40px)}
 .office .wview{background:var(--pdf-bg);min-height:100%}
+#wZoom{position:absolute;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:6;display:flex;align-items:center;gap:2px;padding:4px;border-radius:999px;background:var(--panel);border:1px solid var(--line);box-shadow:0 8px 22px -8px var(--shadow)}
+#wZoom button{min-width:40px;height:40px;border:0;border-radius:999px;background:transparent;color:var(--ink);display:grid;place-items:center;font-weight:600;font-size:13px;padding:0 8px}
+#wZoom button:hover{background:var(--panel-2)}
+#wZoom #wzPct{min-width:62px}
+.office .wview{touch-action:pan-x pan-y}
+.office .wview .wpages{width:max-content;max-width:none;margin:0 auto}
+.office .wview .wpages .docx-wrapper{width:max-content}
+.office .wview .wpaper{transform-origin:0 0}
+
 .wpages .docx-wrapper{background:transparent!important;padding:8px 0!important}
 .wpages .docx-wrapper>section.docx{box-shadow:0 2px 10px rgba(0,0,0,.25);margin-bottom:16px!important}
 .wpaper{max-width:820px;margin:0 auto;background:#fff;color:#1d1d1d;padding:48px 56px;box-shadow:0 2px 12px rgba(0,0,0,.2);font:16px/1.6 Calibri,Carlito,"Segoe UI",Arial,"Noto Naskh Arabic",sans-serif;min-height:60vh;outline:0;overflow-wrap:break-word}
@@ -994,7 +1003,7 @@ async function importOffice(f,ctl,fmt,buf){
 const O={book:null,kind:null,dirty:false,mode:'view',buf:null};
 function officeShell(book){
   closeEpub();closePdf(true);
-  O.book=book;O.kind=book.format;O.dirty=false;O.mode='view';
+  O.book=book;O.kind=book.format;O.dirty=false;O.mode='view';WZ.z=1;
   $('#app').hidden=true;const v=$('#office');v.hidden=false;v.dataset.kind=O.kind;
   $('#oTitle').textContent=book.title;$('#oSub').textContent={docx:'Word document',xlsx:'Excel workbook',pptx:'PowerPoint presentation'}[O.kind];
   $('#oTool').innerHTML='';$('#oTool').hidden=true;$('#oSheets').hidden=true;$('#oBody').innerHTML='<p class="oload">Opening…</p>';$('#oBody').className='';
@@ -1057,14 +1066,62 @@ async function wordView(){
       await window.docx.renderAsync(O.buf.slice(0),host,null,{className:'docx',inWrapper:true,ignoreLastRenderedPageBreak:true,renderComments:false,useBase64URL:false,experimental:true});
       fitWordPages();return}catch(e){console.warn(e)}
   }
-  if(await loadLib('mammoth')){const r=await mammoth.convertToHtml({arrayBuffer:O.buf.slice(0)});body.innerHTML=`<div class="wpaper">${sanitizeDoc(r.value)}</div>`;return}
+  if(await loadLib('mammoth')){const r=await mammoth.convertToHtml({arrayBuffer:O.buf.slice(0)});body.innerHTML=`<div class="wpaper">${sanitizeDoc(r.value)}</div>`;WZ.fit=1;applyWz();return}
   body.innerHTML='<p class="oload">The Word tools didn’t load. Check your connection and open it again.</p>';
 }
 function fitWordPages(){
-  const host=$('#oBody .wpages');if(!host)return;const w=host.querySelector('.docx-wrapper');if(!w)return;
-  w.style.zoom='';const sec=w.querySelector('section.docx');if(!sec)return;const pw=sec.offsetWidth+24,aw=$('#oScroll').clientWidth-8;
-  if(pw>aw)w.style.zoom=String(Math.max(0.3,aw/pw));
+  const w=wzTarget();if(!w)return;w.style.zoom='';let fit=1;const sec=w.querySelector('section.docx');
+  if(sec){const pw=sec.offsetWidth+24,aw=$('#oScroll').clientWidth-8;if(pw>aw)fit=Math.max(0.3,aw/pw)}
+  WZ.fit=fit;applyWz();
 }
+/* ---------- Word view: zoom with two fingers, Ctrl + mouse wheel, the − / + buttons or the + − 0 keys ---------- */
+const WZ={z:1,fit:1};
+function wzTarget(){return $('#oBody .wpages .docx-wrapper')||$('#oBody .wpaper')}
+function wzActive(){return !!(O.book&&O.kind==='docx'&&O.mode==='view'&&wzTarget())}
+function applyWz(){const w=wzTarget();if(w)w.style.zoom=String(WZ.fit*WZ.z);wzLabel()}
+function wzLabel(){const b=$('#wZoom');if(!b)return;const on=wzActive();b.hidden=!on;if(on)$('#wzPct').textContent=Math.round(WZ.fit*WZ.z*100)+'%'}
+/* keeps the point at (fx,fy) of the page block under the screen point (tx,ty) */
+function wzKeep(fx,fy,tx,ty){const w=wzTarget(),sc=$('#oScroll');if(!w)return;const r=w.getBoundingClientRect();
+  sc.scrollLeft+=r.left+fx*r.width-tx;sc.scrollTop+=r.top+fy*r.height-ty}
+function wzFrac(cx,cy){const r=wzTarget().getBoundingClientRect();return[(cx-r.left)/r.width,(cy-r.top)/r.height]}
+function zoomWord(z,cx,cy,tx,ty){
+  if(!wzActive())return;const sc=$('#oScroll').getBoundingClientRect();
+  if(cx==null){cx=sc.left+sc.width/2;cy=sc.top+sc.height/2}if(tx==null){tx=cx;ty=cy}
+  const [fx,fy]=wzFrac(cx,cy);WZ.z=clamp(z,0.25/WZ.fit,5/WZ.fit);applyWz();wzKeep(fx,fy,tx,ty);
+}
+(function(){
+  const sc=$('#oScroll');
+  const bar=document.createElement('div');bar.id='wZoom';bar.hidden=true;bar.setAttribute('role','group');bar.setAttribute('aria-label','Zoom');
+  bar.innerHTML='<button data-wz="out" aria-label="Zoom out"><svg class="i" viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button><button data-wz="fit" id="wzPct" aria-label="Fit page width">100%</button><button data-wz="in" aria-label="Zoom in"><svg class="i" viewBox="0 0 24 24"><path d="M6 12h12M12 6v12"/></svg></button>';
+  $('#office').appendChild(bar);
+  bar.addEventListener('click',e=>{const b=e.target.closest('[data-wz]');if(!b)return;const k=b.dataset.wz;
+    if(k==='fit'){const r=sc.getBoundingClientRect();const [fx,fy]=wzFrac(r.left+r.width/2,r.top+40);WZ.z=1;applyWz();wzKeep(fx,fy,r.left+r.width/2,r.top+40)}
+    else zoomWord(WZ.z*(k==='in'?1.25:0.8))});
+  new MutationObserver(wzLabel).observe($('#oBody'),{attributes:true,attributeFilter:['class'],childList:true});
+  sc.addEventListener('wheel',e=>{if(!e.ctrlKey||!wzActive())return;e.preventDefault();zoomWord(WZ.z*(e.deltaY<0?1.1:1/1.1),e.clientX,e.clientY)},{passive:false});
+  let pz=null,lastTap=null;
+  sc.addEventListener('touchstart',e=>{
+    if(!wzActive())return;
+    if(e.touches.length===2){const[a,b]=e.touches;const mx=(a.clientX+b.clientX)/2,my=(a.clientY+b.clientY)/2,br=$('#oBody').getBoundingClientRect();
+      pz={d:Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY)||1,r:1,mx,my,dx:0,dy:0,f:wzFrac(mx,my)};
+      $('#oBody').style.transformOrigin=`${mx-br.left}px ${my-br.top}px`;lastTap=null;return}
+    if(e.touches.length===1){const t=e.touches[0],now=Date.now();
+      if(lastTap&&now-lastTap.t<320&&Math.hypot(t.clientX-lastTap.x,t.clientY-lastTap.y)<30){e.preventDefault();lastTap=null;
+        zoomWord(WZ.z<1.4?2:1,t.clientX,t.clientY)}else lastTap={t:now,x:t.clientX,y:t.clientY}}
+  },{passive:false});
+  sc.addEventListener('touchmove',e=>{if(!pz||e.touches.length!==2)return;e.preventDefault();const[a,b]=e.touches;
+    pz.r=clamp(Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY)/pz.d,0.25/(WZ.fit*WZ.z),5/(WZ.fit*WZ.z));
+    pz.dx=(a.clientX+b.clientX)/2-pz.mx;pz.dy=(a.clientY+b.clientY)/2-pz.my;
+    $('#oBody').style.transform=`translate(${pz.dx}px,${pz.dy}px) scale(${pz.r})`},{passive:false});
+  const end=e=>{if(!pz||(e.touches&&e.touches.length>=2))return;const p=pz;pz=null;$('#oBody').style.transform='';$('#oBody').style.transformOrigin='';
+    WZ.z=clamp(WZ.z*p.r,0.25/WZ.fit,5/WZ.fit);applyWz();wzKeep(p.f[0],p.f[1],p.mx+p.dx,p.my+p.dy)};
+  sc.addEventListener('touchend',end);sc.addEventListener('touchcancel',end);
+  document.addEventListener('keydown',e=>{
+    if(!wzActive()||!$('#modal').hidden||e.altKey)return;const t=(e.target.tagName||'').toLowerCase();if(t==='input'||t==='textarea'||e.target.isContentEditable)return;
+    const k=e.key;if(k==='+'||k==='='){e.preventDefault();zoomWord(WZ.z*1.25)}else if(k==='-'||k==='_'){e.preventDefault();zoomWord(WZ.z*0.8)}else if(k==='0'&&!e.ctrlKey){e.preventDefault();WZ.z=1;applyWz()}
+    else if((e.ctrlKey||e.metaKey)&&(k==='+'||k==='='||k==='-')){e.preventDefault();zoomWord(WZ.z*(k==='-'?0.8:1.25))}
+  },true);
+})();
 window.addEventListener('resize',()=>{if(O.book&&O.kind==='docx'&&O.mode==='view')fitWordPages()});
 function sanitizeDoc(html){const d=new DOMParser().parseFromString('<div>'+html+'</div>','text/html');
   d.querySelectorAll('script,style,iframe,object,embed,link,meta,form').forEach(x=>x.remove());
