@@ -14,6 +14,7 @@ After the first install, the app tells you when a new version is out (a card on 
 ## What it does
 
 - Bookshelf, sorted by what you read last
+- Scanner: take pictures of pages, auto crop and straighten, filters, save as PDF or JPG, English text recognition (Urdu and Pashto as a one-time download), shelf folders
 - Tabs for several open books, and split view to read two side by side (drag the bar between them to resize)
 - EPUB reader: text size, text width, fonts, themes, continuous scroll, Urdu and Pashto support
 - PDF reader: zoom, night mode, outline, search, bookmarks

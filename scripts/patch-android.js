@@ -44,6 +44,9 @@ const endAct = man.indexOf('</activity>', actIdx);
 man = man.slice(0, endAct) + filters + '        ' + man.slice(endAct);
 if (!man.includes('REQUEST_INSTALL_PACKAGES'))
   man = man.replace('</manifest>', '    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\n</manifest>');
+// camera for the scanner (asked the first time you scan)
+if (!man.includes('android.permission.CAMERA'))
+  man = man.replace('</manifest>', '    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-feature android:name="android.hardware.camera" android:required="false" />\n</manifest>');
 if (!man.includes('POST_NOTIFICATIONS'))
   man = man.replace('</manifest>', '    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n</manifest>');
 fs.writeFileSync(manPath, man);
