@@ -2402,7 +2402,7 @@ async function openPdf(book,opt={}){
     const doc=await loadPdf(new Uint8Array(await blob.arrayBuffer()));
     if(tok!==P.token){doc.destroy();return}
     Object.assign(P,{doc,book,els:[],texts:[],visible:new Set(),outline:null,rot:book.rot||0});
-    P.fit=book.fit||'width';P.scale=book.scale||1;
+    P.fit=book.fit||'width';P.scale=book.scale||1;P.homeFit=book.fit==='page'?'page':'width';
     const n=doc.numPages;const p1=await doc.getPage(1);const v=p1.getViewport({scale:1,rotation:P.rot});
     P.sizes=Array.from({length:n},()=>({w:v.width,h:v.height}));
     const host=$('#pPages');const frag=document.createDocumentFragment();
@@ -2472,7 +2472,7 @@ $('#pScroll').addEventListener('scroll',onPdfScroll,{passive:true});
 $('#pIn').addEventListener('change',e=>{const v=parseInt(e.target.value,10);if(v)gotoPage(v)});
 $('#pIn').addEventListener('keydown',e=>{if(e.key==='Enter'){const v=parseInt(e.target.value,10);if(v)gotoPage(v);e.target.blur()}});
 $('#pRange').addEventListener('input',e=>gotoPage(Number(e.target.value)));
-$('#pScroll').addEventListener('click',e=>{if(!$('#modal').hidden&&$('#modal').classList.contains('panel')){closePanel(true);return}if(DR.on)return;const ws=window.getSelection();if(ws&&!ws.isCollapsed)return;if(pdfTap(e))return;if(e.target.closest('.pg')||e.target===$('#pPages')||e.target===$('#pScroll'))$('#pdf').classList.toggle('hidebars')});
+$('#pScroll').addEventListener('click',e=>{if(!$('#modal').hidden&&$('#modal').classList.contains('panel')){closePanel(true);return}if(DR.on)return;const ws=window.getSelection();if(ws&&!ws.isCollapsed)return;if(pdfTap(e))return;if(e.target.closest('.pg')||e.target===$('#pPages')||e.target===$('#pScroll'))pdfBarsSoon()});
 /* zoom keeps the spot under your fingers (or mouse, or the screen centre) in place */
 function focalAt(cx,cy){
   const sc=$('#pScroll'),sr=sc.getBoundingClientRect();let best=null,bd=Infinity;
@@ -2489,6 +2489,24 @@ function keepFocal(a){
 function zoomAround(newScale,a){P.fit=null;P.scale=clamp(newScale,0.2,6);layoutPdf(null);keepFocal(a);onPdfScroll()}
 function zoomBy(f,cx,cy){const sc=$('#pScroll'),sr=sc.getBoundingClientRect();
   const a=focalAt(cx==null?sr.left+sr.width/2:cx,cy==null?sr.top+sr.height/2:cy);zoomAround(P.scale*f,a)}
+/* double-tap: zoom in where you tapped; double-tap again: back to the whole page width */
+let pdfBarT=0,pdfTapAt=null,pdfLastDouble=0;
+function pdfBarsSoon(){clearTimeout(pdfBarT);const was=Date.now();pdfBarT=setTimeout(()=>{if(pdfLastDouble<was)$('#pdf').classList.toggle('hidebars')},300)}
+function pdfDoubleTap(x,y){
+  if(!P.doc)return;clearTimeout(pdfBarT);pdfLastDouble=Date.now();
+  const home=P.homeFit||'width';const keep=P.fit;P.fit=home;const fitS=fitScale();P.fit=keep;
+  const a=focalAt(x,y);
+  if(P.scale<=fitS*1.15)zoomAround(clamp(Math.max(fitS*2.2,P.scale*2),0.2,6),a);
+  else{P.fit=home;layoutPdf(null);if(a){if(home==='page'){const el=P.els[a.i];if(el)$('#pScroll').scrollTop=el.offsetTop-12;$('#pScroll').scrollLeft=0}else keepFocal({...a,vx:a.vx})}onPdfScroll();if(P.book){P.book.fit=home;saveBook(P.book)}}
+}
+$('#pScroll').addEventListener('touchstart',e=>{if(e.touches.length!==1){pdfTapAt=null;return}const t=e.touches[0];pdfTapAt={...pdfTapAt,s:Date.now(),x:t.clientX,y:t.clientY,moved:false}},{passive:true});
+$('#pScroll').addEventListener('touchmove',e=>{if(pdfTapAt&&e.touches.length===1){const t=e.touches[0];if(Math.hypot(t.clientX-pdfTapAt.x,t.clientY-pdfTapAt.y)>12)pdfTapAt.moved=true}else if(pdfTapAt)pdfTapAt.moved=true},{passive:true});
+$('#pScroll').addEventListener('touchend',e=>{
+  const p=pdfTapAt;if(!p||p.moved||e.touches.length||Date.now()-p.s>280||DR.on||!P.doc){if(p)p.last=null;return}
+  const ws=window.getSelection();if(ws&&!ws.isCollapsed){p.last=null;return}
+  if(p.last&&Date.now()-p.last.t<320&&Math.hypot(p.x-p.last.x,p.y-p.last.y)<40){e.preventDefault();p.last=null;pdfDoubleTap(p.x,p.y);return}
+  p.last={t:Date.now(),x:p.x,y:p.y};
+},{passive:false});
 $('#pScroll').addEventListener('wheel',e=>{if(!e.ctrlKey||!P.doc)return;e.preventDefault();zoomBy(e.deltaY<0?1.08:1/1.08,e.clientX,e.clientY)},{passive:false});
 // pinch to zoom
 let pinch=null;
@@ -2580,8 +2598,8 @@ $('#pdf').addEventListener('click',e=>{
   else if(act==='nextpg')gotoPage(P.cur+2);
   else if(act==='zin')zoomBy(1.15);
   else if(act==='zout')zoomBy(1/1.15);
-  else if(act==='fitw'){const an=anchorPdf();P.fit='width';layoutPdf(an)}
-  else if(act==='fitp'){const an=anchorPdf();P.fit='page';layoutPdf(an)}
+  else if(act==='fitw'){const an=anchorPdf();P.fit='width';P.homeFit='width';layoutPdf(an)}
+  else if(act==='fitp'){const an=anchorPdf();P.fit='page';P.homeFit='page';layoutPdf(an)}
   else if(act==='full')fullscreen();
 });
 window.addEventListener('resize',()=>{if(P.doc&&P.fit){clearTimeout(window._pr);window._pr=setTimeout(()=>layoutPdf(anchorPdf()),150)}});
