@@ -104,3 +104,23 @@ jobs:
           body: ${{ github.event.head_commit.message || 'New version' }}
           make_latest: true
           files: out/*
+
+  # Builds from other branches are only for testing: they go to a hidden draft, never to the apps.
+  test-draft:
+    needs: [version, android]
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: android
+          path: out
+      - name: Draft for testing
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: test-${{ needs.version.outputs.version }}
+          name: Test ${{ needs.version.outputs.version }} (not for install)
+          draft: true
+          prerelease: true
+          make_latest: false
+          files: out/*
