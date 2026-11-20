@@ -66,6 +66,67 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .tabs button{border:1px solid transparent;background:transparent;padding:6px 14px;border-radius:999px;font-weight:600;color:var(--ink-2)}
 .tabs button[aria-pressed="true"]{background:var(--ink);color:var(--wall)}
 .tabs .sp{flex:1}
+
+/* scanner */
+.scan{position:fixed;inset:0;z-index:50;background:#0B0E14;color:#ECE6D8;display:flex;flex-direction:column}
+.scan .scv{position:absolute;inset:0;display:flex;flex-direction:column}
+.scan .scv[hidden]{display:none}
+#scVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}
+#scOverlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#scFlash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+#scFlash.go{animation:scfl .35s ease-out}@keyframes scfl{from{opacity:.75}to{opacity:0}}
+.scan .sctop{position:relative;z-index:2;display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) 10px max(12px,env(safe-area-inset-left,0px));background:linear-gradient(rgba(11,14,20,.85),rgba(11,14,20,0))}
+.scan .scpanel .sctop{background:#12161F;border-bottom:1px solid #2A3142}
+.scan .sct{flex:1;font-weight:700;font-size:16px}
+.scan .ib{color:#ECE6D8;background:rgba(27,34,50,.7);border:1px solid #2A3142}
+.scan .ib[aria-pressed="true"]{background:#E0A84F;color:#1A1206}
+.scan .btn{background:#1B2232;color:#ECE6D8;border-color:#2E3547}
+.scan .btn.primary{background:#E0A84F;color:#1A1206;border-color:#E0A84F}
+#scName{flex:1;min-width:0;background:#1B2232;color:#ECE6D8;border:1px solid #2E3547;border-radius:10px;padding:9px 12px;font:inherit;font-weight:600}
+.scan .scbot{position:absolute;left:0;right:0;bottom:0;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:18px max(22px,env(safe-area-inset-right,0px)) calc(22px + env(safe-area-inset-bottom,0px)) max(22px,env(safe-area-inset-left,0px));background:linear-gradient(rgba(11,14,20,0),rgba(11,14,20,.9))}
+.scshut{width:76px;height:76px;border-radius:50%;border:5px solid #ECE6D8;background:#E0A84F;box-shadow:0 0 0 3px rgba(0,0,0,.35)}
+.scshut:active{transform:scale(.94)}
+.scg,.scdone{width:78px;display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:0;color:#ECE6D8;font-size:12px;font-weight:600}
+.scg .i{width:30px;height:30px}
+.scdone{position:relative}.scdone:disabled{opacity:.4}
+.scth{width:46px;height:58px;border-radius:6px;background:#1B2232 center/cover no-repeat;border:2px solid #ECE6D8}
+.scdone b{position:absolute;top:-6px;right:10px;min-width:22px;height:22px;border-radius:11px;background:#E0A84F;color:#1A1206;font-size:12px;display:grid;place-items:center;padding:0 5px}
+.scmsg{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:32px;text-align:center;font-size:16px;line-height:1.5}
+.scmsga{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.scgrid{flex:1;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px;padding:16px max(16px,env(safe-area-inset-right,0px)) 16px max(16px,env(safe-area-inset-left,0px));align-content:start}
+.scp{display:flex;flex-direction:column;gap:6px;min-width:0}
+.scpi{border:0;padding:0;background:#1B2232;border-radius:8px;overflow:hidden;aspect-ratio:3/4;display:grid;place-items:center}
+.scpi img{max-width:100%;max-height:100%;display:block;background:#fff}
+.scpb{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600}
+.scpb span{flex:1}.scpb em{font-style:normal;font-size:11px;color:#E0A84F}
+.scpb button{width:34px;height:30px;border-radius:8px;border:1px solid #2E3547;background:#1B2232;color:#ECE6D8;font-size:18px;line-height:1}
+.scpb button:disabled{opacity:.3}
+.scadd{border:2px dashed #3B4560;border-radius:8px;background:none;color:#A3ABBC;aspect-ratio:3/4;align-items:center;justify-content:center;font-weight:600;flex-direction:column}
+.schint{margin:0;padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));font-size:13px;color:#A3ABBC;text-align:center}
+.scstage{position:relative;flex:1;min-height:0}
+#scCropWrap,#scLook{position:absolute;inset:0}
+#scCropCv{position:absolute;box-shadow:0 6px 24px rgba(0,0,0,.5)}
+#scCropSvg{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+#scCropSvg circle{cursor:grab}
+#scMag{position:absolute;border-radius:50%;border:3px solid #E0A84F;box-shadow:0 6px 18px rgba(0,0,0,.6);background:#000;pointer-events:none}
+.sccropb{position:absolute;left:0;right:0;bottom:10px;display:flex;justify-content:center;gap:10px}
+#scLook{display:grid;place-items:center;padding:16px}
+#scLookImg{max-width:100%;max-height:100%;box-shadow:0 6px 24px rgba(0,0,0,.5);background:#fff}
+.scchips{display:flex;gap:8px;overflow-x:auto;padding:10px 14px;scrollbar-width:none}
+.scchips button{flex:none;padding:8px 14px;border-radius:999px;border:1px solid #2E3547;background:#1B2232;color:#ECE6D8;font-weight:600;font-size:13px}
+.scchips button[aria-pressed="true"]{background:#E0A84F;color:#1A1206;border-color:#E0A84F}
+.scadj{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;padding:4px 16px 8px;font-size:13px;color:#A3ABBC}
+.scadj label{display:flex;align-items:center;gap:8px;flex:1 1 160px}.scadj input{flex:1;accent-color:#E0A84F}
+.sctools{display:flex;justify-content:space-around;padding:8px 6px calc(10px + env(safe-area-inset-bottom,0px));background:#12161F;border-top:1px solid #2A3142}
+.sctools button{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:60px;padding:6px 4px;border:0;border-radius:10px;background:none;color:#C3C8D3;font-size:12px;font-weight:600}
+.sctools button[aria-pressed="true"]{color:#E0A84F}
+body.scanning #tabbar{display:none}
+.ftabs{display:contents}
+.tabs [data-tab^="f:"],.tabs .fnew{display:inline-flex;align-items:center;gap:6px}
+.tabs [data-tab^="f:"] .i,.tabs .fnew .i{width:16px;height:16px}
+.tabs [data-tab^="f:"] small{font-size:11px;opacity:.7;font-weight:600}
+.tabs .fnew{border:1px dashed var(--line)!important;color:var(--ink-2)}
+
 .tabs select{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 12px}
 #shelves{--bw:124px;--gap:26px;position:relative;margin-top:10px;padding:8px 0 0;border-radius:18px;background:radial-gradient(120% 60% at 50% 0%,color-mix(in srgb,var(--brass) 14%,transparent),transparent 70%)}
 .shelf{padding-top:30px}
@@ -523,6 +584,7 @@ body.tts-open .pages{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 340px
     <div class="actions">
       <label class="search"><svg class="i"><use href="#i-search"/></svg><input id="q" type="search" placeholder="Search your shelf" aria-label="Search your shelf"></label>
       <button class="sync" id="syncBtn" data-s="off" aria-label="Sync status"><i></i><span id="syncTxt">Sync</span></button>
+      <button class="ib" id="scanBtn" aria-label="Scan pages with the camera" title="Scan"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg></button>
       <button class="ib" id="appMenuBtn" aria-label="Menu"><svg class="i"><use href="#i-more"/></svg></button>
       <button class="btn primary" id="addBtn"><svg class="i"><use href="#i-plus"/></svg>Add books</button>
     </div>
@@ -533,6 +595,7 @@ body.tts-open .pages{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 340px
     <button data-tab="epub" aria-pressed="false">EPUB</button>
     <button data-tab="conv" aria-pressed="false">Converted</button>
     <button data-tab="docs" aria-pressed="false">Documents</button>
+    <span id="ftabs" class="ftabs"></span>
     <span class="sp"></span>
     <select id="sort" aria-label="Sort shelf"><option value="recent">Recently read</option><option value="added">Recently added</option><option value="title">Title A–Z</option></select>
   </nav>
@@ -540,6 +603,47 @@ body.tts-open .pages{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 340px
   <p class="foot">Books are kept privately on this device. Turn on sync (⋯ → Sync between devices) to see them on your phone and computer. Scanned PDFs open in the PDF reader; PDFs made from Word documents convert to EPUB with adjustable text.</p>
   <input type="file" id="file" multiple class="vh" tabindex="-1" aria-hidden="true">
 </div>
+
+
+<!-- Scanner -->
+<section id="scan" class="scan" hidden aria-label="Scanner">
+  <div id="scCam" class="scv">
+    <video id="scVideo" playsinline muted autoplay></video>
+    <canvas id="scOverlay" aria-hidden="true"></canvas>
+    <div id="scFlash" aria-hidden="true"></div>
+    <div id="scMsg" class="scmsg" hidden></div>
+    <div class="sctop"><button class="ib" data-sc="close" aria-label="Close scanner"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><span class="sct">Scan</span><button class="ib" id="scTorch" data-sc="torch" aria-pressed="false" aria-label="Torch" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg></button></div>
+    <div class="scbot">
+      <button class="scg" data-sc="gal" aria-label="Add pictures from the gallery"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M4 18l5-5 4 4 3-3 4 4"/></svg><span>Gallery</span></button>
+      <button class="scshut" data-sc="shoot" aria-label="Take a picture of the page"></button>
+      <button class="scdone" id="scDone" data-sc="done" disabled aria-label="Next: check the pages"><span id="scThumb" class="scth"></span><b id="scN">0</b><span>Next</span></button>
+    </div>
+  </div>
+  <div id="scRev" class="scv scpanel" hidden>
+    <div class="sctop"><button class="ib" data-sc="close" aria-label="Close scanner"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><input id="scName" aria-label="Name of the scan"><button class="btn primary" id="scSave" data-sc="save">Save</button></div>
+    <div id="scGrid" class="scgrid"></div>
+    <p class="schint">Tap a page to crop, rotate or change its look. Use ‹ › to change the order.</p>
+  </div>
+  <div id="scEdit" class="scv scpanel" hidden>
+    <div class="sctop"><button class="ib" data-sc="ecancel" aria-label="Cancel changes to this page"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><span class="sct" id="scEt">Page</span><button class="btn primary" data-sc="edone">Done</button></div>
+    <div class="scstage">
+      <div id="scCropWrap"><canvas id="scCropCv"></canvas><svg id="scCropSvg" aria-label="Drag the four corners to the edges of the page"></svg><canvas id="scMag" width="120" height="120" hidden></canvas>
+        <div class="sccropb"><button class="btn" data-sc="auto">Find edges</button><button class="btn" data-sc="fullq">Whole picture</button></div></div>
+      <div id="scLook" hidden><img id="scLookImg" alt="How the page will look"></div>
+    </div>
+    <div id="scFilters" class="scchips" hidden></div>
+    <div id="scAdjust" class="scadj" hidden><label>Brightness<input type="range" id="scB" min="-50" max="50" value="0"></label><label>Contrast<input type="range" id="scC" min="-50" max="80" value="0"></label><button class="btn" data-sc="applyall">Same look on all pages</button></div>
+    <div class="sctools" id="scModes">
+      <button data-md="crop"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3v15h15M3 6h15v15"/></svg><span>Crop</span></button>
+      <button data-md="look"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4v16a8 8 0 0 0 0-16z" fill="currentColor"/></svg><span>Filters</span></button>
+      <button data-sc="rot"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg><span>Rotate</span></button>
+      <button data-sc="retake"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg><span>Retake</span></button>
+      <button data-sc="del"><svg class="i"><use href="#i-trash"/></svg><span>Delete</span></button>
+    </div>
+  </div>
+  <input type="file" id="scPick" accept="image/*" multiple class="vh" tabindex="-1" aria-hidden="true">
+  <input type="file" id="scSys" accept="image/*" capture="environment" class="vh" tabindex="-1" aria-hidden="true">
+</section>
 
 <!-- EPUB reader -->
 <section class="reader" id="epub" hidden data-rt="paper">
@@ -869,6 +973,7 @@ async function importEpub(f,ctl){
 function addMenu(){
   const b=sheet(`<h2>Add books</h2><p class="muted" style="margin:0">PDF, EPUB, Word, Excel or PowerPoint files.</p>
    <div class="menu">
+    <button data-scanopen><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg><span>Scan with the camera<small>Pages become a PDF: cropped, straightened and cleaned up</small></span></button>
     <div class="pickwrap" style="position:relative;display:flex;align-items:center;gap:14px;padding:12px;border-radius:12px;font-weight:500">
       <svg class="i"><use href="#i-file"/></svg><span>Choose files<small>${BS.platform==='android'?'From your phone, Downloads or Google Drive (tap ☰ in the picker to switch)':BS.platform==='windows'?'From your computer, including your Google Drive (G:) folder':'From this device'}</small></span>
       <input type="file" id="devPick" multiple aria-label="Choose files" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0">
@@ -877,7 +982,7 @@ function addMenu(){
    </div>
    <div class="mact"><button class="btn" data-a="x">Close</button></div>`);
   $('#devPick').addEventListener('change',e=>{const fs=[...e.target.files];if(fs.length)importFiles(fs)});
-  b.onclick=e=>{const a=e.target.closest('[data-a]');if(!a)return;if(a.dataset.a==='img'){closeSheet();imagesToPdf()}else closeSheet()};
+  b.onclick=e=>{if(e.target.closest('[data-scanopen]')){closeSheet();scanOpen();return}const a=e.target.closest('[data-a]');if(!a)return;if(a.dataset.a==='img'){closeSheet();imagesToPdf()}else closeSheet()};
 }
 let mcpNS;
 async function getMcp(){if(mcpNS!==undefined)return mcpNS;try{mcpNS=window.claude&&window.claude.use?await window.claude.use('mcp'):null}catch(e){mcpNS=null}return mcpNS}
@@ -1853,7 +1958,7 @@ const Sync={on:false,state:'off',timers:{},dirty:new Set(),upq:[],uploading:fals
     books.forEach(b=>{if(b.sourceId&&!b.srcK){const s=byId(b.sourceId);if(s&&s.k){b.srcK=s.k;this.touch(b)}}});
   },
   metaOf(b){const src=b.sourceId&&byId(b.sourceId);
-    return{k:b.k,fp:b.fp||null,title:b.title||'',author:b.author||'',format:b.format,size:b.size||0,pages:b.pages||0,hasText:b.hasText!==false,hue:b.hue||0,cover:b.cover||null,
+    return{k:b.k,fp:b.fp||null,title:b.title||'',folder:b.folder||'',author:b.author||'',format:b.format,size:b.size||0,pages:b.pages||0,hasText:b.hasText!==false,hue:b.hue||0,cover:b.cover||null,
     assetId:b.assetId||null,srcK:b.srcK||(src&&src.k)||null,dir:b.dir||'auto',progress:b.progress||0,pos:b.pos||null,stop:b.stop||null,
     openedAt:b.openedAt||0,addedAt:b.addedAt||0,metaAt:b.metaAt||0,rot:b.rot||0,rev:b.rev||0,deleted:false}},
   hlOf(b){const items=byIdSort(b.hls);const o={k:b.k,items,bm:byIdSort(b.bookmarks),tomb:b.hlTomb||{},bmTomb:b.bmTomb||{}};
@@ -1896,14 +2001,14 @@ const Sync={on:false,state:'off',timers:{},dirty:new Set(),upq:[],uploading:fals
         this.sentH[docId]=strHash(canon(d));return}
       if(!b){const al=books.find(x=>(x.fileKs||[]).includes(k));if(al){this.sentH[docId]=strHash(canon(d));this.write(docId,{k,deleted:true,deletedAt:Date.now(),mergedInto:al.k});return}
         b={id:uid(),k,cloud:true,fp:d.fp||null,title:d.title,author:d.author,format:d.format,size:d.size,pages:d.pages,hasText:d.hasText,hue:d.hue,cover:d.cover,assetId:d.assetId,srcK:d.srcK,dir:d.dir,
-          progress:d.progress,pos:d.pos,stop:d.stop,openedAt:d.openedAt,addedAt:d.addedAt,metaAt:d.metaAt,rot:d.rot,rev:d.rev||0,bookmarks:[],hls:[]};books.push(b)}
+          folder:d.folder||'',progress:d.progress,pos:d.pos,stop:d.stop,openedAt:d.openedAt,addedAt:d.addedAt,metaAt:d.metaAt,rot:d.rot,rev:d.rev||0,bookmarks:[],hls:[]};books.push(b)}
       else{
         const open=(R&&R.book===b)||P.book===b;
         if((d.openedAt||0)>(b.openedAt||0)+1500){
           if(open){if(Math.abs((d.progress||0)-(b.progress||0))>0.002&&d.pos){const dp=d.pos;const pct=Math.round((d.progress||0)*100);
               toast(`On your other device you’re at ${b.format==='pdf'&&dp.page?'page '+dp.page:pct+'%'}.`,{label:'Go there',fn:()=>{if(d.stop){b.stop=d.stop;if(R&&R.book===b){showEpubStop(true);return}if(P.book===b){showPdfStop(true);return}}if(R&&R.book===b)restoreAnchor(dp);else if(P.book===b&&dp.page)gotoPage(dp.page)}})}}
           else{b.pos=d.pos;b.progress=d.progress;b.openedAt=d.openedAt;b.stop=d.stop||null}}
-        if((d.metaAt||0)>(b.metaAt||0)){b.title=d.title;b.author=d.author;b.hue=d.hue;b.metaAt=d.metaAt}
+        if((d.metaAt||0)>(b.metaAt||0)){b.title=d.title;b.author=d.author;b.hue=d.hue;b.folder=d.folder||'';b.metaAt=d.metaAt}
         for(const f of ['assetId','cover','pages','srcK','fp'])if(!b[f]&&d[f])b[f]=d[f];
         if(b.cloud&&d.assetId)b.assetId=d.assetId;
         if((d.rev||0)>(b.rev||0)&&d.assetId){b.rev=d.rev;b.assetId=d.assetId;b.size=d.size;b.cloud=true;if(O.book===b&&!O.dirty)toast('This document was changed on your other device. Go back and open it again to see the changes.')}
@@ -2004,7 +2109,8 @@ function coverHtml(b){
 }
 function renderShelf(){try{Upd.paint()}catch(e){}
   const q=$('#q').value.trim().toLowerCase();
-  let list=books.filter(b=>tab==='all'||(tab==='pdf'&&b.format==='pdf')||(tab==='epub'&&b.format==='epub')||(tab==='conv'&&!!b.sourceId)||(tab==='docs'&&isOffice(b)));
+  if(tab.startsWith('f:')&&!folderList().includes(tab.slice(2)))tab='all';renderFolderTabs();
+  let list=books.filter(b=>tab==='all'||(tab==='pdf'&&b.format==='pdf')||(tab==='epub'&&b.format==='epub')||(tab==='conv'&&!!b.sourceId)||(tab==='docs'&&isOffice(b))||(tab.startsWith('f:')&&(b.folder||'')===tab.slice(2)));
   if(q)list=list.filter(b=>(b.title+' '+(b.author||'')).toLowerCase().includes(q));
   list.sort(sortBy==='title'?(a,b)=>a.title.localeCompare(b.title):sortBy==='added'?(a,b)=>b.addedAt-a.addedAt:(a,b)=>(b.openedAt||0)-(a.openedAt||0)||b.addedAt-a.addedAt);
   $$('#tabs [data-tab]').forEach(t=>t.setAttribute('aria-pressed',String(t.dataset.tab===tab)));
@@ -2028,10 +2134,13 @@ document.addEventListener('click',e=>{
   const o=e.target.closest('[data-open]');if(o&&!o.closest('.reader')){const b=byId(o.dataset.open);if(b){closeSheet();openBook(b)}return}
   const m=e.target.closest('[data-more]');if(m){bookMenu(byId(m.dataset.more));return}
 });
-$('#tabs').addEventListener('click',e=>{const t=e.target.closest('[data-tab]');if(!t)return;tab=t.dataset.tab;LS.set('tab',tab);renderShelf()});
+$('#tabs').addEventListener('click',e=>{if(e.target.closest('[data-newfolder]')){askFolderName('',n=>{addFolder(n);tab='f:'+n;LS.set('tab',tab);renderShelf()});return}
+  const t=e.target.closest('[data-tab]');if(!t)return;if(t.dataset.tab===tab&&tab.startsWith('f:')){folderMenu(tab.slice(2));return}tab=t.dataset.tab;LS.set('tab',tab);renderShelf()});
+$('#tabs').addEventListener('contextmenu',e=>{const t=e.target.closest('[data-tab^="f:"]');if(t){e.preventDefault();folderMenu(t.dataset.tab.slice(2))}});
 $('#sort').addEventListener('change',e=>{sortBy=e.target.value;LS.set('sort2',sortBy);renderShelf()});
 $('#q').addEventListener('input',()=>renderShelf());
 $('#addBtn').addEventListener('click',addMenu);
+$('#scanBtn').addEventListener('click',()=>scanOpen());
 $('#file').addEventListener('change',e=>{importFiles(e.target.files);e.target.value=''});
 let rzT;window.addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(()=>{if(!$('#app').hidden)renderShelf()},120)});
 let dragN=0;
@@ -2039,6 +2148,43 @@ window.addEventListener('dragenter',e=>{if(e.dataTransfer&&[...e.dataTransfer.ty
 window.addEventListener('dragleave',()=>{dragN=Math.max(0,dragN-1);if(!dragN)$('#drop').hidden=true});
 window.addEventListener('dragover',e=>e.preventDefault());
 window.addEventListener('drop',e=>{e.preventDefault();dragN=0;$('#drop').hidden=true;if(e.dataTransfer&&e.dataTransfer.files.length)importFiles(e.dataTransfer.files)});
+
+
+/* ---------- folders on the shelf ---------- */
+function folderList(){const set=new Set(LS.get('folders',[]));for(const b of books)if(b.folder)set.add(b.folder);return [...set].sort((a,b)=>a.localeCompare(b))}
+function addFolder(n){const l=LS.get('folders',[]);if(!l.includes(n)){l.push(n);LS.set('folders',l)}}
+const FOLDER_SVG='<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
+function renderFolderTabs(){const el=$('#ftabs');if(!el)return;const fl=folderList();
+  el.innerHTML=fl.map(n=>`<button data-tab="f:${esc(n)}" aria-pressed="${tab==='f:'+n}" title="Folder: ${esc(n)}">${FOLDER_SVG}<span>${esc(n)}</span><small>${books.filter(b=>b.folder===n).length}</small></button>`).join('')+
+    `<button data-newfolder class="fnew" aria-label="New folder" title="New folder"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6v12M6 12h12"/></svg><span>Folder</span></button>`}
+function askFolderName(cur,done){
+  const b=sheet(`<h2>${cur?'Rename folder':'New folder'}</h2><label class="f" for="fdN">Name</label><input id="fdN" maxlength="40" value="${esc(cur)}" placeholder="e.g. Site photos, Bills, Exam notes" autocomplete="off">
+    <div class="mact"><button class="btn" data-a="x">Cancel</button><button class="btn primary" data-a="ok">${cur?'Rename':'Create'}</button></div>`);
+  const inp=$('#fdN');setTimeout(()=>inp.focus(),60);
+  const go=()=>{const n=inp.value.trim().replace(/\s+/g,' ');if(!n){inp.focus();return}if(n!==cur&&folderList().includes(n)){toast('There’s already a folder with that name');return}closeSheet();done(n)};
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go()}});
+  b.onclick=e=>{const a=e.target.closest('[data-a]');if(!a)return;if(a.dataset.a==='ok')go();else closeSheet()};
+}
+function setFolder(b,n){b.folder=n||'';b.metaAt=Date.now();saveBook(b)}
+function moveToFolder(b){
+  const fl=folderList();
+  const body=sheet(`<h2>Move to folder</h2><p class="muted" style="margin:0">${esc(b.title)}</p><div class="menu">
+    ${fl.map(n=>`<button data-fo="${esc(n)}" aria-pressed="${b.folder===n}">${FOLDER_SVG}<span>${esc(n)}${b.folder===n?'<small>Here now</small>':''}</span></button>`).join('')}
+    <button data-fo=""><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg><span>No folder</span></button>
+    <button data-fnew><svg class="i" viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg><span>New folder…</span></button></div><div class="mact"><button class="btn" data-a="x">Cancel</button></div>`);
+  body.onclick=e=>{if(e.target.closest('[data-fnew]')){askFolderName('',n=>{addFolder(n);setFolder(b,n);renderShelf();toast(`Moved to “${n}”`)});return}
+    const f=e.target.closest('[data-fo]');if(f){closeSheet();setFolder(b,f.dataset.fo);renderShelf();toast(f.dataset.fo?`Moved to “${f.dataset.fo}”`:'Taken out of the folder');return}
+    if(e.target.closest('[data-a]'))closeSheet()};
+}
+function folderMenu(n){
+  const cnt=books.filter(b=>b.folder===n).length;
+  const body=sheet(`<h2>${esc(n)}</h2><p class="muted" style="margin:0">${cnt} item${cnt===1?'':'s'}</p><div class="menu">
+    <button data-fm="ren"><svg class="i"><use href="#i-edit"/></svg><span>Rename folder</span></button>
+    <button data-fm="del" class="del"><svg class="i"><use href="#i-trash"/></svg><span>Remove folder<small>The books stay on your shelf</small></span></button></div><div class="mact"><button class="btn" data-a="x">Close</button></div>`);
+  body.onclick=e=>{const m=e.target.closest('[data-fm]');if(!m){if(e.target.closest('[data-a]'))closeSheet();return}
+    if(m.dataset.fm==='ren')askFolderName(n,nn=>{const l=LS.get('folders',[]).map(x=>x===n?nn:x);LS.set('folders',l);for(const b of books)if(b.folder===n)setFolder(b,nn);tab='f:'+nn;LS.set('tab',tab);renderShelf()});
+    else{closeSheet();LS.set('folders',LS.get('folders',[]).filter(x=>x!==n));for(const b of books)if(b.folder===n)setFolder(b,'');tab='all';LS.set('tab',tab);renderShelf();toast(`Folder “${n}” removed`)}};
+}
 
 function bookMenu(b){
   if(!b)return;
@@ -2052,6 +2198,7 @@ function bookMenu(b){
     ${b.format==='pdf'&&!b.cloud?'<button data-m="tools"><svg class="i"><use href="#i-file"/></svg><span>PDF tools<small>Organise pages, merge, split, compress, convert…</small></span></button>':''}
     <button data-m="save"><svg class="i"><use href="#i-down"/></svg><span>Save ${b.format.toUpperCase()} file</span></button>
     <button data-m="rename"><svg class="i"><use href="#i-edit"/></svg><span>Edit title and author</span></button>
+    <button data-m="folder"><svg class="i" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Move to folder…<small>${b.folder?'In “'+esc(b.folder)+'”':'Not in a folder'}</small></span></button>
     <button data-m="same"><svg class="i"><use href="#i-book"/></svg><span>Same book as…<small>Combine two copies of one book into one</small></span></button>
     <button data-m="del" class="del"><svg class="i"><use href="#i-trash"/></svg><span>Remove from shelf</span></button>
    </div>`);
@@ -2065,6 +2212,7 @@ function bookMenu(b){
     else if(m==='tools'){pdfToolsMenu(b)}
     else if(m==='rename')renameBook(b);
     else if(m==='same')sameAsMenu(b);
+    else if(m==='folder')moveToFolder(b);
     else if(m==='del'){closeSheet();const ok=await confirmBox('Remove this book?',`“${b.title}” will be removed from Book Shelf on your phone and your laptop, with its highlights. Your original file in Drive or on your device is not affected.`,'Remove');if(ok){Sync.removed(b);await Store.delBook(b.id);books=books.filter(x=>x.id!==b.id);books.forEach(x=>{if(x.convertedId===b.id)x.convertedId=null;if(x.sourceId===b.id)x.sourceId=null});books.forEach(saveBook);renderShelf();toast('Removed from your shelf')}}
   };
 }
@@ -4556,6 +4704,323 @@ async function seedGuide(){
 }
 
 
+
+/* ================= Scanner: camera, page finding, straightening, filters, PDF ================= */
+LIBS.tess=['lib/tess/tesseract.min.js',()=>!!window.Tesseract];
+async function loadCv(){
+  if(window.cv&&window.cv.Mat)return true;
+  if(!(await loadLib('cvraw')))return false;
+  let c=window.cv;
+  try{
+    if(c&&typeof c.then==='function')c=await c;
+    if(c&&!c.Mat)await new Promise((res,rej)=>{const t=setTimeout(()=>rej(new Error('timeout')),30000);c.onRuntimeInitialized=()=>{clearTimeout(t);res()}});
+    window.cv=c;return !!(c&&c.Mat);
+  }catch(e){console.warn('page finder did not start',e);return false}
+}
+LIBS.cvraw=['lib/opencv.js',()=>!!window.cv];
+
+const SCAN_FILTERS=[['original','Original'],['enhance','Enhance'],['magic','Magic colour'],['gray','Grayscale'],['bw','Black & white']];
+const Scan={pages:[],cur:-1,stream:null,track:null,torch:false,live:0,name:'',busy:false};
+const sid=()=>'s'+Math.random().toString(36).slice(2,9);
+const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+
+/* -------- finding the page in a picture -------- */
+function orderQuad(pts){
+  const s=pts.map(p=>p[0]+p[1]),d=pts.map(p=>p[1]-p[0]);
+  const tl=pts[s.indexOf(Math.min(...s))],br=pts[s.indexOf(Math.max(...s))],tr=pts[d.indexOf(Math.min(...d))],bl=pts[d.indexOf(Math.max(...d))];
+  return [tl,tr,br,bl];
+}
+function findQuad(srcCanvas){
+  const cv=window.cv;if(!cv||!cv.Mat)return null;
+  const W=srcCanvas.width,H=srcCanvas.height,k=Math.min(1,560/Math.max(W,H));
+  const sm=document.createElement('canvas');sm.width=Math.round(W*k);sm.height=Math.round(H*k);sm.getContext('2d').drawImage(srcCanvas,0,0,sm.width,sm.height);
+  const mats=[];const M=x=>{mats.push(x);return x};
+  try{
+    const src=M(cv.imread(sm)),g=M(new cv.Mat());cv.cvtColor(src,g,cv.COLOR_RGBA2GRAY);cv.GaussianBlur(g,g,new cv.Size(5,5),0);
+    const area=sm.width*sm.height;let best=null,bestA=0;
+    const tryEdges=e=>{
+      const cs=M(new cv.MatVector()),h=M(new cv.Mat());cv.findContours(e,cs,h,cv.RETR_LIST,cv.CHAIN_APPROX_SIMPLE);
+      for(let i=0;i<cs.size();i++){const c=cs.get(i);const a=cv.contourArea(c);
+        if(a>area*0.12&&a>bestA){const ap=new cv.Mat();cv.approxPolyDP(c,ap,0.02*cv.arcLength(c,true),true);
+          if(ap.rows===4&&cv.isContourConvex(ap)){bestA=a;best=[];for(let j=0;j<4;j++)best.push([ap.data32S[j*2]/sm.width,ap.data32S[j*2+1]/sm.height])}
+          else if(a>area*0.25&&!best){const hull=new cv.Mat();cv.convexHull(c,hull,false,true);const ap2=new cv.Mat();cv.approxPolyDP(hull,ap2,0.03*cv.arcLength(hull,true),true);
+            if(ap2.rows===4){bestA=a*0.9;best=[];for(let j=0;j<4;j++)best.push([ap2.data32S[j*2]/sm.width,ap2.data32S[j*2+1]/sm.height])}hull.delete();ap2.delete()}
+          ap.delete()}
+        c.delete()}
+    };
+    const e=M(new cv.Mat());cv.Canny(g,e,40,130);const kk=M(cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3)));cv.dilate(e,e,kk);tryEdges(e);
+    if(!best){const t=M(new cv.Mat());cv.threshold(g,t,0,255,cv.THRESH_BINARY+cv.THRESH_OTSU);cv.morphologyEx(t,t,cv.MORPH_CLOSE,kk);tryEdges(t)}
+    return best?orderQuad(best):null;
+  }catch(e){console.warn(e);return null}
+  finally{for(const m of mats){try{m.delete()}catch(x){}}}
+}
+const FULL_QUAD=()=>[[0,0],[1,0],[1,1],[0,1]];
+
+/* -------- straightening, rotating and filtering one page -------- */
+const QUALITY={high:[2600,0.9],normal:[2000,0.82],small:[1400,0.7]};
+async function bitmapToCanvas(blob){
+  const url=URL.createObjectURL(blob);try{const im=new Image();im.decoding='async';im.src=url;await im.decode();
+    const k=Math.min(1,3200/Math.max(im.naturalWidth,im.naturalHeight));const c=document.createElement('canvas');c.width=Math.round(im.naturalWidth*k);c.height=Math.round(im.naturalHeight*k);
+    c.getContext('2d').drawImage(im,0,0,c.width,c.height);return c}finally{URL.revokeObjectURL(url)}
+}
+function warpPage(pg,maxSide){
+  const src=pg.src,W=src.width,H=src.height;const q=(pg.quad||FULL_QUAD()).map(p=>[p[0]*W,p[1]*H]);
+  let ow=Math.max(dist(q[0],q[1]),dist(q[3],q[2])),oh=Math.max(dist(q[0],q[3]),dist(q[1],q[2]));
+  const k=Math.min(1,maxSide/Math.max(ow,oh));ow=Math.max(20,Math.round(ow*k));oh=Math.max(20,Math.round(oh*k));
+  const out=document.createElement('canvas');out.width=ow;out.height=oh;
+  const cv=window.cv;
+  if(cv&&cv.Mat){const s=cv.imread(src),d=new cv.Mat();
+    const a=cv.matFromArray(4,1,cv.CV_32FC2,q.flat()),b=cv.matFromArray(4,1,cv.CV_32FC2,[0,0,ow,0,ow,oh,0,oh]);
+    const T=cv.getPerspectiveTransform(a,b);cv.warpPerspective(s,d,T,new cv.Size(ow,oh),cv.INTER_LINEAR,cv.BORDER_REPLICATE);cv.imshow(out,d);
+    [s,d,a,b,T].forEach(m=>m.delete());
+  }else{const xs=q.map(p=>p[0]),ys=q.map(p=>p[1]);const x0=Math.min(...xs),y0=Math.min(...ys);
+    out.getContext('2d').drawImage(src,x0,y0,Math.max(...xs)-x0,Math.max(...ys)-y0,0,0,ow,oh)}
+  return out;
+}
+function rotateCanvas(c,deg){
+  deg=((deg%360)+360)%360;if(!deg)return c;const o=document.createElement('canvas');
+  if(deg===180){o.width=c.width;o.height=c.height}else{o.width=c.height;o.height=c.width}
+  const x=o.getContext('2d');x.translate(o.width/2,o.height/2);x.rotate(deg*Math.PI/180);x.drawImage(c,-c.width/2,-c.height/2);return o;
+}
+function levels(d,lo,hi){const r=255/Math.max(1,hi-lo);for(let i=0;i<d.length;i+=4){d[i]=(d[i]-lo)*r;d[i+1]=(d[i+1]-lo)*r;d[i+2]=(d[i+2]-lo)*r}}
+function percentile(d,p){const h=new Uint32Array(256);let n=0;for(let i=0;i<d.length;i+=16){h[(d[i]*0.3+d[i+1]*0.59+d[i+2]*0.11)|0]++;n++}let acc=0;for(let v=0;v<256;v++){acc+=h[v];if(acc>=n*p)return v}return 255}
+/* background light estimate, used to whiten paper and even out shadows */
+function paperLight(c){
+  const cv=window.cv;const k=Math.min(1,500/Math.max(c.width,c.height));const sm=document.createElement('canvas');sm.width=Math.max(8,Math.round(c.width*k));sm.height=Math.max(8,Math.round(c.height*k));
+  sm.getContext('2d').drawImage(c,0,0,sm.width,sm.height);
+  if(cv&&cv.Mat){const s=cv.imread(sm),g=new cv.Mat();cv.cvtColor(s,g,cv.COLOR_RGBA2GRAY);const kk=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(9,9));cv.dilate(g,g,kk);cv.medianBlur(g,g,21);
+    cv.cvtColor(g,s,cv.COLOR_GRAY2RGBA);cv.imshow(sm,s);[s,g,kk].forEach(m=>m.delete())}
+  else{const x=sm.getContext('2d');x.filter='blur(12px)';x.drawImage(sm,0,0)}
+  const big=document.createElement('canvas');big.width=c.width;big.height=c.height;const bx=big.getContext('2d');bx.imageSmoothingQuality='high';bx.drawImage(sm,0,0,big.width,big.height);
+  return bx.getImageData(0,0,big.width,big.height).data;
+}
+function applyFilter(c,f,bright,contrast){
+  const x=c.getContext('2d',{willReadFrequently:true});const im=x.getImageData(0,0,c.width,c.height),d=im.data;
+  if(f==='enhance'){const lo=percentile(d,0.01),hi=percentile(d,0.985);levels(d,lo,hi);
+    for(let i=0;i<d.length;i+=4){const g=(d[i]+d[i+1]+d[i+2])/3;d[i]=g+(d[i]-g)*1.15;d[i+1]=g+(d[i+1]-g)*1.15;d[i+2]=g+(d[i+2]-g)*1.15}}
+  else if(f==='magic'||f==='gray'||f==='bw'){const bg=paperLight(c);
+    for(let i=0;i<d.length;i+=4){const L=Math.max(40,bg[i]);const m=235/L;let r=d[i]*m,g=d[i+1]*m,b=d[i+2]*m;
+      if(f==='magic'){const v=(r+g+b)/3;r=v+(r-v)*1.25;g=v+(g-v)*1.25;b=v+(b-v)*1.25;d[i]=r;d[i+1]=g;d[i+2]=b}
+      else{const v=r*0.3+g*0.59+b*0.11;d[i]=d[i+1]=d[i+2]=v}}
+    if(f==='magic'||f==='gray'){const lo=percentile(d,0.02);levels(d,Math.min(lo,90),232)}
+    else{let sum=0,n=0;for(let i=0;i<d.length;i+=16){sum+=d[i];n++}const thr=Math.min(200,(sum/n)*0.78);
+      for(let i=0;i<d.length;i+=4){const v=d[i]<thr?0:255;d[i]=d[i+1]=d[i+2]=v}}}
+  if(bright||contrast){const cf=1+contrast/100,bf=bright*1.6;for(let i=0;i<d.length;i+=4){d[i]=(d[i]-128)*cf+128+bf;d[i+1]=(d[i+1]-128)*cf+128+bf;d[i+2]=(d[i+2]-128)*cf+128+bf}}
+  x.putImageData(im,0,0);return c;
+}
+function renderPage(pg,maxSide){let c=warpPage(pg,maxSide||1600);c=rotateCanvas(c,pg.rot||0);return applyFilter(c,pg.filter||'original',pg.bright||0,pg.contrast||0)}
+const canvasBlob=(c,q)=>new Promise(r=>c.toBlob(r,'image/jpeg',q||0.85));
+async function pagePreview(pg){
+  const key=JSON.stringify([pg.quad,pg.rot,pg.filter,pg.bright,pg.contrast]);if(pg.prevKey===key&&pg.prev)return pg.prev;
+  const c=renderPage(pg,1300);const b=await canvasBlob(c,0.8);if(pg.prev)URL.revokeObjectURL(pg.prev);pg.prev=URL.createObjectURL(b);pg.prevKey=key;pg.ratio=c.width/c.height;return pg.prev;
+}
+async function addScanPage(blob){
+  const src=await bitmapToCanvas(blob);const pg={id:sid(),src,quad:null,rot:0,filter:LS.get('scanFilter','magic'),bright:0,contrast:0};
+  if(await loadCv())pg.quad=findQuad(src);pg.found=!!pg.quad;if(!pg.quad)pg.quad=FULL_QUAD();
+  Scan.pages.push(pg);return pg;
+}
+
+/* -------- the camera screen -------- */
+function scanOpen(){
+  Scan.pages.forEach(p=>p.prev&&URL.revokeObjectURL(p.prev));Scan.pages=[];Scan.cur=-1;
+  const d=new Date();Scan.name='Scan '+d.toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
+  $('#scan').hidden=false;$('#app').hidden=true;document.body.classList.add('scanning');scanCamera();loadCv();
+}
+function scanClose(force){
+  if(!force&&Scan.pages.length){confirmBox('Leave the scan?',`${Scan.pages.length} page${Scan.pages.length>1?'s':''} will be thrown away.`,'Leave').then(ok=>{if(ok)scanClose(true)});return}
+  scanStopCam();$('#scan').hidden=true;$('#app').hidden=false;document.body.classList.remove('scanning');
+  Scan.pages.forEach(p=>p.prev&&URL.revokeObjectURL(p.prev));Scan.pages=[];renderShelf();
+}
+function scanStopCam(){clearInterval(Scan.live);Scan.live=0;if(Scan.stream){Scan.stream.getTracks().forEach(t=>t.stop());Scan.stream=null;Scan.track=null}}
+async function scanCamera(){
+  $('#scCam').hidden=false;$('#scRev').hidden=true;$('#scEdit').hidden=true;scanCount();
+  const v=$('#scVideo'),msg=$('#scMsg');msg.hidden=true;
+  if(Scan.stream)return;
+  try{
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('none');
+    Scan.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:3840},height:{ideal:2160}},audio:false});
+    Scan.track=Scan.stream.getVideoTracks()[0];v.srcObject=Scan.stream;await v.play().catch(()=>{});
+    const caps=Scan.track.getCapabilities?Scan.track.getCapabilities():{};$('#scTorch').hidden=!caps.torch;Scan.torch=false;$('#scTorch').setAttribute('aria-pressed','false');
+    clearInterval(Scan.live);Scan.live=setInterval(scanLive,280);
+  }catch(e){console.warn('camera',e);
+    msg.hidden=false;msg.innerHTML=`<p>${e&&e.name==='NotAllowedError'?'Book Shelf isn’t allowed to use the camera. Allow it in your phone’s settings, or use the buttons below.':'No camera was found here.'}</p>
+      <div class="scmsga"><button class="btn primary" data-sc="gal">Add pictures</button>${/Android/i.test(navigator.userAgent)?'<button class="btn" data-sc="sys">Use the camera app</button>':''}</div>`}
+}
+/* draws the page outline over the live camera picture */
+function scanLive(){
+  const v=$('#scVideo'),ov=$('#scOverlay');if(!v.videoWidth||!window.cv||!window.cv.Mat||$('#scCam').hidden)return;
+  const c=document.createElement('canvas');const k=360/Math.max(v.videoWidth,v.videoHeight);c.width=Math.round(v.videoWidth*k);c.height=Math.round(v.videoHeight*k);c.getContext('2d').drawImage(v,0,0,c.width,c.height);
+  const q=findQuad(c);const r=v.getBoundingClientRect();ov.width=r.width;ov.height=r.height;const x=ov.getContext('2d');x.clearRect(0,0,ov.width,ov.height);if(!q)return;
+  const s=Math.max(r.width/v.videoWidth,r.height/v.videoHeight),dw=v.videoWidth*s,dh=v.videoHeight*s,ox=(r.width-dw)/2,oy=(r.height-dh)/2;
+  x.beginPath();q.forEach((p,i)=>{const px=ox+p[0]*dw,py=oy+p[1]*dh;i?x.lineTo(px,py):x.moveTo(px,py)});x.closePath();
+  x.fillStyle='rgba(224,168,79,.18)';x.fill();x.lineWidth=3;x.strokeStyle='#E0A84F';x.stroke();
+}
+async function scanShoot(){
+  if(Scan.busy||!Scan.track)return;Scan.busy=true;const fl=$('#scFlash');fl.classList.remove('go');void fl.offsetWidth;fl.classList.add('go');
+  try{let blob=null;
+    if('ImageCapture' in window){try{blob=await new ImageCapture(Scan.track).takePhoto()}catch(e){blob=null}}
+    if(!blob){const v=$('#scVideo');const c=document.createElement('canvas');c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0);blob=await canvasBlob(c,0.92)}
+    await addScanPage(blob);scanCount();
+  }catch(e){console.warn(e);toast('That picture didn’t work. Try again.')}finally{Scan.busy=false}
+}
+function scanCount(){const n=Scan.pages.length;$('#scDone').disabled=!n;$('#scN').textContent=n;
+  const last=Scan.pages[n-1];const th=$('#scThumb');if(last){pagePreview(last).then(u=>{th.style.backgroundImage=`url("${u}")`})}else th.style.backgroundImage=''}
+async function scanAddFiles(files){
+  const list=[...files].filter(f=>/^image\//.test(f.type)||/\.(jpe?g|png|webp|heic|bmp)$/i.test(f.name));if(!list.length)return;
+  const s=sheet(`<h2>Adding pictures</h2><p class="muted stat" id="bsub">Finding the pages…</p><div class="pbar"><i id="bbar" style="width:5%"></i></div>`);
+  for(let i=0;i<list.length;i++){setBusy(`Page ${i+1} of ${list.length}`,(i+.5)/list.length);try{await addScanPage(list[i])}catch(e){console.warn(e)}}
+  closeSheet();if(!$('#scRev').hidden)scanReview();else scanCount();
+}
+
+/* -------- the pages screen -------- */
+async function scanReview(){
+  clearInterval(Scan.live);Scan.live=0;if(Scan.stream){Scan.stream.getTracks().forEach(t=>t.stop());Scan.stream=null;Scan.track=null}
+  $('#scCam').hidden=true;$('#scEdit').hidden=true;$('#scRev').hidden=false;$('#scName').value=Scan.name;
+  const g=$('#scGrid');
+  g.innerHTML=Scan.pages.map((p,i)=>`<div class="scp" data-pi="${i}"><button class="scpi" data-sp="${i}" aria-label="Page ${i+1}: edit"><img alt="" data-pimg="${i}"></button><div class="scpb"><span>${i+1}</span>${p.found?'':'<em title="The page edges weren’t found; check the crop">Check crop</em>'}<button data-mv="${i}:-1" aria-label="Move page ${i+1} earlier" ${i?'':'disabled'}>‹</button><button data-mv="${i}:1" aria-label="Move page ${i+1} later" ${i<Scan.pages.length-1?'':'disabled'}>›</button></div></div>`).join('')+
+    `<button class="scp scadd" data-sc="more"><svg class="i" viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg><span>Add pages</span></button>`;
+  for(let i=0;i<Scan.pages.length;i++){const u=await pagePreview(Scan.pages[i]);const im=g.querySelector(`[data-pimg="${i}"]`);if(im)im.src=u}
+  $('#scSave').disabled=!Scan.pages.length;
+}
+/* -------- one page: corners, filter, rotate, delete, retake -------- */
+function scanEdit(i){
+  scanStopCam();Scan.cur=i;const pg=Scan.pages[i];if(!pg)return;pg.undo={quad:pg.quad.map(p=>p.slice()),rot:pg.rot,filter:pg.filter,bright:pg.bright,contrast:pg.contrast};
+  $('#scRev').hidden=true;$('#scEdit').hidden=false;$('#scEt').textContent=`Page ${i+1} of ${Scan.pages.length}`;
+  $('#scFilters').innerHTML=SCAN_FILTERS.map(([k,l])=>`<button data-fl="${k}" aria-pressed="${pg.filter===k}">${l}</button>`).join('');
+  $('#scB').value=pg.bright||0;$('#scC').value=pg.contrast||0;scanMode('crop');
+}
+function scanMode(m){const pg=Scan.pages[Scan.cur];$$('#scModes [data-md]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.md===m)));
+  $('#scCropWrap').hidden=m!=='crop';$('#scLook').hidden=m!=='look';$('#scAdjust').hidden=m!=='look';$('#scFilters').hidden=m!=='look';
+  if(m==='crop')scanDrawCrop();else scanDrawLook();}
+async function scanDrawLook(){const pg=Scan.pages[Scan.cur];const u=await pagePreview(pg);$('#scLookImg').src=u}
+function scanDrawCrop(){
+  const pg=Scan.pages[Scan.cur];const wrap=$('#scCropWrap'),cv=$('#scCropCv');
+  const box=wrap.getBoundingClientRect();const k=Math.min((box.width-40)/pg.src.width,(box.height-40)/pg.src.height);
+  cv.width=Math.round(pg.src.width*k);cv.height=Math.round(pg.src.height*k);cv.getContext('2d').drawImage(pg.src,0,0,cv.width,cv.height);
+  cv.style.left=Math.round((box.width-cv.width)/2)+'px';cv.style.top=Math.round((box.height-cv.height)/2)+'px';scanDrawHandles();
+}
+function scanDrawHandles(){
+  const pg=Scan.pages[Scan.cur],cv=$('#scCropCv'),svg=$('#scCropSvg');const L=parseFloat(cv.style.left),T=parseFloat(cv.style.top),W=cv.width,H=cv.height;
+  const P=pg.quad.map(p=>[L+p[0]*W,T+p[1]*H]);
+  svg.innerHTML=`<path d="M${P.map(p=>p.join(' ')).join(' L')} Z" fill="rgba(224,168,79,.16)" stroke="#E0A84F" stroke-width="2.5"/>`+
+    P.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="15" data-h="${i}" fill="rgba(18,22,31,.55)" stroke="#E0A84F" stroke-width="3"/>`).join('');
+}
+(function scanUi(){
+  const root=$('#scan');
+  root.addEventListener('click',async e=>{
+    const a=e.target.closest('[data-sc]');
+    if(a){const k=a.dataset.sc;
+      if(k==='close')scanClose();else if(k==='shoot')scanShoot();else if(k==='done')scanReview();
+      else if(k==='gal'){$('#scPick').click()}else if(k==='sys'){$('#scSys').click()}
+      else if(k==='more'){scanCamera()}else if(k==='back'){scanCamera()}
+      else if(k==='torch'&&Scan.track){Scan.torch=!Scan.torch;try{await Scan.track.applyConstraints({advanced:[{torch:Scan.torch}]})}catch(x){}a.setAttribute('aria-pressed',String(Scan.torch))}
+      else if(k==='save')scanSaveSheet();
+      else if(k==='edone'){const pg=Scan.pages[Scan.cur];pg.found=true;scanReview()}
+      else if(k==='ecancel'){const pg=Scan.pages[Scan.cur];if(pg&&pg.undo)Object.assign(pg,pg.undo);scanReview()}
+      else if(k==='rot'){const pg=Scan.pages[Scan.cur];pg.rot=((pg.rot||0)+90)%360;scanMode('look')}
+      else if(k==='auto'){const pg=Scan.pages[Scan.cur];if(await loadCv()){const q=findQuad(pg.src);if(q){pg.quad=q;toast('Page edges found')}else toast('The page edges weren’t found. Drag the corners.')}scanDrawHandles()}
+      else if(k==='fullq'){Scan.pages[Scan.cur].quad=FULL_QUAD();scanDrawHandles()}
+      else if(k==='del'){Scan.pages.splice(Scan.cur,1);if(Scan.pages.length)scanReview();else scanCamera()}
+      else if(k==='retake'){Scan.retake=Scan.cur;scanCamera()}
+      else if(k==='applyall'){const pg=Scan.pages[Scan.cur];for(const p of Scan.pages){p.filter=pg.filter;p.bright=pg.bright;p.contrast=pg.contrast}toast('Same look on all pages')}
+      return}
+    const md=e.target.closest('[data-md]');if(md){scanMode(md.dataset.md);return}
+    const fl=e.target.closest('[data-fl]');if(fl){const pg=Scan.pages[Scan.cur];pg.filter=fl.dataset.fl;LS.set('scanFilter',pg.filter);$$('#scFilters [data-fl]').forEach(b=>b.setAttribute('aria-pressed',String(b===fl)));scanDrawLook();return}
+    const sp=e.target.closest('[data-sp]');if(sp){scanEdit(+sp.dataset.sp);return}
+    const mv=e.target.closest('[data-mv]');if(mv){const [i,dd]=mv.dataset.mv.split(':').map(Number);const j=i+dd;if(j<0||j>=Scan.pages.length)return;const t=Scan.pages[i];Scan.pages[i]=Scan.pages[j];Scan.pages[j]=t;scanReview();return}
+  });
+  $('#scPick').addEventListener('change',e=>{scanAddFiles(e.target.files);e.target.value=''});
+  $('#scSys').addEventListener('change',e=>{scanAddFiles(e.target.files);e.target.value=''});
+  $('#scName').addEventListener('input',e=>{Scan.name=e.target.value});
+  let adjT=0;const adj=()=>{const pg=Scan.pages[Scan.cur];pg.bright=+$('#scB').value;pg.contrast=+$('#scC').value;clearTimeout(adjT);adjT=setTimeout(scanDrawLook,120)};
+  $('#scB').addEventListener('input',adj);$('#scC').addEventListener('input',adj);
+  /* dragging the corners, with a magnifier above your finger */
+  const svg=$('#scCropSvg');let drag=null;
+  svg.addEventListener('pointerdown',e=>{const h=e.target.closest('[data-h]');if(!h)return;e.preventDefault();drag={i:+h.dataset.h,pid:e.pointerId};try{svg.setPointerCapture(e.pointerId)}catch(x){}});
+  svg.addEventListener('pointermove',e=>{if(!drag)return;const pg=Scan.pages[Scan.cur],cv=$('#scCropCv'),r=cv.getBoundingClientRect();
+    pg.quad[drag.i]=[clamp((e.clientX-r.left)/r.width,0,1),clamp((e.clientY-r.top)/r.height,0,1)];scanDrawHandles();
+    const mg=$('#scMag');mg.hidden=false;const mx=mg.getContext('2d'),sx=pg.quad[drag.i][0]*pg.src.width,sy=pg.quad[drag.i][1]*pg.src.height,z=60;
+    mx.clearRect(0,0,120,120);mx.drawImage(pg.src,sx-z/2,sy-z/2,z,z,0,0,120,120);mx.strokeStyle='#E0A84F';mx.lineWidth=2;mx.beginPath();mx.moveTo(60,48);mx.lineTo(60,72);mx.moveTo(48,60);mx.lineTo(72,60);mx.stroke();
+    const wr=$('#scCropWrap').getBoundingClientRect();mg.style.left=clamp(e.clientX-wr.left-60,4,wr.width-124)+'px';mg.style.top=Math.max(4,e.clientY-wr.top-150)+'px'});
+  const up=()=>{if(!drag)return;drag=null;$('#scMag').hidden=true;const pg=Scan.pages[Scan.cur];pg.quad=orderQuad(pg.quad);scanDrawHandles()};
+  svg.addEventListener('pointerup',up);svg.addEventListener('pointercancel',up);
+  window.addEventListener('resize',()=>{if(!$('#scan').hidden&&!$('#scEdit').hidden&&!$('#scCropWrap').hidden)scanDrawCrop()});
+})();
+/* a retake replaces the page in place */
+const _addScanPage=addScanPage;
+addScanPage=async function(blob){const pg=await _addScanPage(blob);if(Scan.retake!=null&&Scan.pages[Scan.retake]){const at=Scan.retake;Scan.retake=null;Scan.pages.pop();
+  const old=Scan.pages[at];pg.filter=old.filter;pg.bright=old.bright;pg.contrast=old.contrast;if(old.prev)URL.revokeObjectURL(old.prev);Scan.pages[at]=pg;setTimeout(()=>scanEdit(at),0)}return pg};
+
+/* -------- saving -------- */
+const PAPER={a4:[595.28,841.89],letter:[612,792]};
+const OCR_LANGS=[['','No text recognition'],['eng','English'],['urd','Urdu (download once, about 2 MB)'],['pus','Pashto (download once, about 2 MB)']];
+function scanSaveSheet(){
+  const fl=folderList(),last=LS.get('scanOpts',{folder:'',size:'a4',q:'normal',ocr:'',as:'pdf'});
+  const b=sheet(`<h2>Save scan</h2>
+    <label class="f" for="svN">Name</label><input id="svN" value="${esc(Scan.name)}" maxlength="90">
+    <label class="f" for="svF">Folder</label><select id="svF"><option value="">No folder</option>${fl.map(n=>`<option ${last.folder===n?'selected':''}>${esc(n)}</option>`).join('')}<option value="__new">New folder…</option></select>
+    <label class="f" for="svA">Save as</label><select id="svA"><option value="pdf" ${last.as!=='jpg'?'selected':''}>PDF on the shelf</option><option value="jpg" ${last.as==='jpg'?'selected':''}>Pictures (JPG) to a folder</option></select>
+    <div id="svPdfOpts"><label class="f" for="svS">Page size</label><select id="svS"><option value="a4" ${last.size==='a4'?'selected':''}>A4</option><option value="letter" ${last.size==='letter'?'selected':''}>Letter</option><option value="fit" ${last.size==='fit'?'selected':''}>Same as the picture</option></select>
+    <label class="f" for="svO">Recognise text (OCR)</label><select id="svO">${OCR_LANGS.map(([k,l])=>`<option value="${k}" ${last.ocr===k?'selected':''}>${l}${k&&k!=='eng'&&(LS.get('ocrHave',[]).includes(k))?' — downloaded':''}</option>`).join('')}</select>
+    <p class="muted" style="font-size:12.5px;margin:4px 0 0">English makes the PDF searchable and its text selectable. Urdu and Pashto text can be copied or saved as a Word file; handwriting comes out less accurately.</p></div>
+    <label class="f" for="svQ">Quality</label><select id="svQ"><option value="high" ${last.q==='high'?'selected':''}>High (larger file)</option><option value="normal" ${last.q==='normal'?'selected':''}>Normal</option><option value="small" ${last.q==='small'?'selected':''}>Small (for WhatsApp and email)</option></select>
+    <div class="mact"><button class="btn" data-a="x">Cancel</button><button class="btn primary" data-a="go">Save</button></div>`);
+  const sync=()=>{$('#svPdfOpts').hidden=$('#svA').value!=='pdf'};sync();$('#svA').addEventListener('change',sync);
+  $('#svF').addEventListener('change',e=>{if(e.target.value==='__new'){const nm=$('#svN').value;askFolderName('',n=>{addFolder(n);Scan.name=nm;LS.set('scanOpts',{...LS.get('scanOpts',{}),folder:n});scanSaveSheet()})}});
+  b.onclick=e=>{const a=e.target.closest('[data-a]');if(!a)return;if(a.dataset.a!=='go'){closeSheet();return}
+    const o={name:($('#svN').value.trim()||Scan.name),folder:$('#svF').value==='__new'?'':$('#svF').value,size:$('#svS').value,q:$('#svQ').value,ocr:$('#svA').value==='pdf'?$('#svO').value:'',as:$('#svA').value};
+    LS.set('scanOpts',o);Scan.name=o.name;scanSave(o)};
+}
+async function ocrWorker(lang,onProg){
+  if(!(await loadLib('tess')))throw new Error('The text reader didn’t load.');
+  const base=new URL('lib/tess/',location.href).href;
+  const opts=gz=>({workerPath:base+'worker.min.js',corePath:base+'core',logger:m=>{if(onProg&&m&&typeof m.progress==='number')onProg(m.status,m.progress)},gzip:gz,cacheMethod:'write'});
+  if(lang==='eng')return Tesseract.createWorker('eng',1,{...opts(true),langPath:base+'lang'});
+  try{const w=await Tesseract.createWorker(lang,1,{...opts(true),langPath:`https://cdn.jsdelivr.net/npm/@tesseract.js-data/${lang}/4.0.0_best_int`});LS.set('ocrHave',[...new Set([...LS.get('ocrHave',[]),lang])]);return w}
+  catch(e){console.warn('language download, trying another source',e);
+    const w=await Tesseract.createWorker(lang,1,{...opts(false),langPath:'https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/main'});LS.set('ocrHave',[...new Set([...LS.get('ocrHave',[]),lang])]);return w}
+}
+const WINANSI=/^[\x20-\x7E -ÿ]+$/;
+async function scanSave(o){
+  const [maxSide,q]=QUALITY[o.q]||QUALITY.normal;const n=Scan.pages.length;
+  sheet(`<h2>Saving “${esc(o.name)}”</h2><p class="muted stat" id="bsub">Preparing pages…</p><div class="pbar"><i id="bbar" style="width:3%"></i></div>`);
+  try{
+    const imgs=[];for(let i=0;i<n;i++){setBusy(`Page ${i+1} of ${n}`,(i+.5)/n*(o.ocr?0.4:0.85));const c=renderPage(Scan.pages[i],maxSide);imgs.push({c,blob:await canvasBlob(c,q)});await sleep(0)}
+    if(o.as==='jpg'){let saved=0;for(let i=0;i<n;i++){setBusy(`Saving picture ${i+1} of ${n}`,0.85+0.15*i/n);const ok=await BS.saveFile(`${safeName(o.name)}${n>1?' - '+(i+1):''}.jpg`,imgs[i].blob,'image/jpeg');if(ok===false)break;saved++}
+      closeSheet();toast(saved?`${saved} picture${saved>1?'s':''} saved`:'Nothing was saved');if(saved)scanClose(true);return}
+    let words=[],texts=[];
+    if(o.ocr){setBusy(o.ocr==='eng'?'Reading the text…':'Getting the language data (first time only)…',0.42);
+      const w=await ocrWorker(o.ocr,(st,p)=>{if(/recogniz/i.test(st))return;setBusy(/load|download/i.test(st)?'Getting the language data (first time only)…':'Starting the text reader…',0.42)});
+      try{for(let i=0;i<n;i++){setBusy(`Reading the text: page ${i+1} of ${n}`,0.45+0.4*i/n);const r=await w.recognize(imgs[i].c);texts.push(r.data.text||'');words.push(r.data.words||[])}}
+      finally{try{await w.terminate()}catch(e){}}}
+    setBusy('Making the PDF…',0.9);
+    const doc=await PDFLib.PDFDocument.create();doc.setTitle(o.name);doc.setCreator('Book Shelf');
+    const font=o.ocr==='eng'?await doc.embedFont(PDFLib.StandardFonts.Helvetica):null;
+    for(let i=0;i<n;i++){const {c,blob}=imgs[i];const jpg=await doc.embedJpg(new Uint8Array(await blob.arrayBuffer()));
+      let pw,ph;if(o.size==='fit'){pw=c.width*72/200;ph=c.height*72/200}else{[pw,ph]=PAPER[o.size]||PAPER.a4;if(c.width>c.height)[pw,ph]=[ph,pw]}
+      const page=doc.addPage([pw,ph]);const k=Math.min(pw/c.width,ph/c.height);const iw=c.width*k,ih=c.height*k,ix=(pw-iw)/2,iy=(ph-ih)/2;
+      page.drawImage(jpg,{x:ix,y:iy,width:iw,height:ih});
+      if(font&&words[i])for(const wd of words[i]){const t=(wd.text||'').trim();if(!t||!WINANSI.test(t)||wd.confidence<30)continue;const bb=wd.bbox;
+        const bw=(bb.x1-bb.x0)*k,bh=(bb.y1-bb.y0)*k;let size=bh*0.92;const tw=font.widthOfTextAtSize(t,size);if(tw>0)size=Math.min(size,size*bw/tw);if(size<1)continue;
+        try{page.drawText(t,{x:ix+bb.x0*k,y:iy+ih-bb.y1*k+bh*0.18,size,font,opacity:0})}catch(e){}}
+    }
+    const bytes=await doc.save();closeSheet();
+    const nb=await addPdfToShelf(bytes,o.name,false);
+    if(nb){if(o.folder){addFolder(o.folder);setFolder(nb,o.folder)}nb.scanned=1;saveBook(nb);renderShelf()}
+    scanClose(true);
+    const txt=texts.join('\n\n').trim();
+    if(o.ocr&&txt){const s=sheet(`<h2>Saved, with its text</h2><p class="muted">“${esc(o.name)}” is on your shelf${o.folder?` in “${esc(o.folder)}”`:''}. ${o.ocr==='eng'?'You can search it and select its text.':'Here is the text it found:'}</p>
+        <textarea id="ocrT" rows="8" dir="auto" style="width:100%;font-size:15px;line-height:1.6" readonly>${esc(txt)}</textarea>
+        <div class="mact"><button class="btn" data-a="copy">Copy text</button><button class="btn" data-a="word">Save as Word</button><button class="btn primary" data-a="open">Open the PDF</button></div>`);
+      s.onclick=async e=>{const a=e.target.closest('[data-a]');if(!a)return;const k=a.dataset.a;
+        if(k==='copy'){try{await navigator.clipboard.writeText(txt);toast('Text copied')}catch(x){$('#ocrT').select();document.execCommand('copy');toast('Text copied')}}
+        else if(k==='word'){const d=document.createElement('div');d.innerHTML=txt.split(/\n{2,}/).map(p=>`<p dir="auto">${esc(p).replace(/\n/g,'<br>')}</p>`).join('');document.body.appendChild(d);d.style.cssText='position:absolute;left:-9999px;top:0;width:800px';
+          const prev=O.book;O.book={title:o.name};const buf=await buildDocx(d);O.book=prev;d.remove();await BS.saveFile(safeName(o.name)+'.docx',new Blob([buf]),OFFICE_MIME.docx)}
+        else{closeSheet();if(nb)openBook(nb)}};
+    }else if(nb)toast(`Saved to your shelf${o.folder?` in “${o.folder}”`:''}`,{label:'Open',fn:()=>openBook(nb)});
+  }catch(e){toolErr(e)}
+}
+
 /* ================= tabs and split view =================
    Every open book is a tab. A tab runs its own copy of the reader in a frame (index.html?tab=…&book=…),
    so two books can be read side by side. The window around them (this page) keeps the shelf, sync and updates. */
@@ -4723,6 +5188,7 @@ if(!EMBED){
   const _back=window.bookshelfBack;
   window.bookshelfBack=function(){
     if(!$('#modal').hidden||!$('#drawer').hidden)return _back();
+    if(!$('#scan').hidden){if(!$('#scEdit').hidden){const pg=Scan.pages[Scan.cur];if(pg&&pg.undo)Object.assign(pg,pg.undo);scanReview()}else if(!$('#scRev').hidden&&Scan.pages.length)scanCamera();else scanClose();return true}
     if(Tabs.active){const t=Tabs.get(Tabs.active);try{if(t&&t.frame&&t.frame.contentWindow.bookshelfBack())return true}catch(e){}Tabs.showShelf();return true}
     if(Tabs.pick){const w=Tabs.pick.with;Tabs.endPick();Tabs.activate(w);return true}
     return _back();

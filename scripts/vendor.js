@@ -22,6 +22,15 @@ copyFirst('pdf-lib.min.js', ['pdf-lib/dist/pdf-lib.min.js']);
 copyFirst('xlsx.full.min.js', ['xlsx/dist/xlsx.full.min.js']);
 copyFirst('mammoth.browser.min.js', ['mammoth/mammoth.browser.min.js', 'mammoth/mammoth.browser.js']);
 copyFirst('docx-preview.min.js', ['docx-preview/dist/docx-preview.min.js', 'docx-preview/dist/docx-preview.js']);
+// scanner: page finding (OpenCV) and text recognition (Tesseract, English built in)
+copyFirst('opencv.js', ['@techstark/opencv-js/dist/opencv.js']);
+fs.mkdirSync(path.join(lib, 'tess', 'core'), { recursive: true });
+fs.mkdirSync(path.join(lib, 'tess', 'lang'), { recursive: true });
+copyFirst('tess/tesseract.min.js', ['tesseract.js/dist/tesseract.min.js']);
+copyFirst('tess/worker.min.js', ['tesseract.js/dist/worker.min.js']);
+for (const v of ['tesseract-core-lstm.wasm.js', 'tesseract-core-simd-lstm.wasm.js', 'tesseract-core-relaxedsimd-lstm.wasm.js'])
+  { const f = nm('tesseract.js-core/' + v); if (fs.existsSync(f)) { fs.copyFileSync(f, path.join(lib, 'tess', 'core', v)); console.log('lib/tess/core/' + v); } else if (!/relaxed/.test(v)) { console.error('MISSING: ' + v); failed = true; } }
+copyFirst('tess/lang/eng.traineddata.gz', ['@tesseract.js-data/eng/4.0.0_best_int/eng.traineddata.gz', '@tesseract.js-data/eng/4.0.0/eng.traineddata.gz']);
 
 const fonts = {
   'young-serif': ['400'], fraunces: ['400', '600'], manrope: ['400', '500', '600', '700'], figtree: ['400', '500', '600', '700'], literata: ['400', '600', '400-italic'],

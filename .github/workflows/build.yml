@@ -89,6 +89,7 @@ jobs:
 
   release:
     needs: [version, windows, android]
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
