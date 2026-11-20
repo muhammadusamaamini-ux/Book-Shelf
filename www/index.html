@@ -4710,12 +4710,12 @@ LIBS.tess=['lib/tess/tesseract.min.js',()=>!!window.Tesseract];
 async function loadCv(){
   if(window.cv&&window.cv.Mat)return true;
   if(!(await loadLib('cvraw')))return false;
-  let c=window.cv;
-  try{
-    if(c&&typeof c.then==='function')c=await c;
-    if(c&&!c.Mat)await new Promise((res,rej)=>{const t=setTimeout(()=>rej(new Error('timeout')),30000);c.onRuntimeInitialized=()=>{clearTimeout(t);res()}});
-    window.cv=c;return !!(c&&c.Mat);
-  }catch(e){console.warn('page finder did not start',e);return false}
+  const c=window.cv;
+  /* the library is ready when cv.Mat exists; waiting on it with await would loop forever */
+  if(c instanceof Promise)c.then(m=>{if(m&&m.Mat){try{delete m.then}catch(e){}window.cv=m}});
+  const t0=Date.now();
+  while(!(window.cv&&window.cv.Mat)){if(Date.now()-t0>40000){console.warn('page finder did not start');return false}await sleep(60)}
+  return true;
 }
 LIBS.cvraw=['lib/opencv.js',()=>!!window.cv];
 
@@ -4975,11 +4975,12 @@ async function ocrWorker(lang,onProg){
   if(!(await loadLib('tess')))throw new Error('The text reader didn’t load.');
   const base=new URL('lib/tess/',location.href).href;
   const opts=gz=>({workerPath:base+'worker.min.js',corePath:base+'core',logger:m=>{if(onProg&&m&&typeof m.progress==='number')onProg(m.status,m.progress)},gzip:gz,cacheMethod:'write'});
-  if(lang==='eng')return Tesseract.createWorker('eng',1,{...opts(true),langPath:base+'lang'});
+  if(lang==='eng')return Tesseract.createWorker('eng',1,{...opts(false),langPath:base+'lang',cacheMethod:'none'});
   try{const w=await Tesseract.createWorker(lang,1,{...opts(true),langPath:`https://cdn.jsdelivr.net/npm/@tesseract.js-data/${lang}/4.0.0_best_int`});LS.set('ocrHave',[...new Set([...LS.get('ocrHave',[]),lang])]);return w}
   catch(e){console.warn('language download, trying another source',e);
     const w=await Tesseract.createWorker(lang,1,{...opts(false),langPath:'https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/main'});LS.set('ocrHave',[...new Set([...LS.get('ocrHave',[]),lang])]);return w}
 }
+function cleanOcr(t){return t.split('\n').map(l=>l.replace(/\s+[|¦]+\s*$/,'').replace(/^\s*[|¦]+\s+/,'')).filter(l=>!/^\s*[|¦!_—–-]+\s*$/.test(l)).join('\n').replace(/\n{3,}/g,'\n\n').trim()}
 const WINANSI=/^[\x20-\x7E -ÿ]+$/;
 async function scanSave(o){
   const [maxSide,q]=QUALITY[o.q]||QUALITY.normal;const n=Scan.pages.length;
@@ -4991,7 +4992,7 @@ async function scanSave(o){
     let words=[],texts=[];
     if(o.ocr){setBusy(o.ocr==='eng'?'Reading the text…':'Getting the language data (first time only)…',0.42);
       const w=await ocrWorker(o.ocr,(st,p)=>{if(/recogniz/i.test(st))return;setBusy(/load|download/i.test(st)?'Getting the language data (first time only)…':'Starting the text reader…',0.42)});
-      try{for(let i=0;i<n;i++){setBusy(`Reading the text: page ${i+1} of ${n}`,0.45+0.4*i/n);const r=await w.recognize(imgs[i].c);texts.push(r.data.text||'');words.push(r.data.words||[])}}
+      try{for(let i=0;i<n;i++){setBusy(`Reading the text: page ${i+1} of ${n}`,0.45+0.4*i/n);const r=await w.recognize(imgs[i].c);texts.push(cleanOcr(r.data.text||''));words.push((r.data.words||[]).filter(x=>!/^[|¦!\[\]_—–-]+$/.test((x.text||'').trim())))}}
       finally{try{await w.terminate()}catch(e){}}}
     setBusy('Making the PDF…',0.9);
     const doc=await PDFLib.PDFDocument.create();doc.setTitle(o.name);doc.setCreator('Book Shelf');

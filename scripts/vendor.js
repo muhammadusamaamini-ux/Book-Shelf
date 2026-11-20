@@ -30,7 +30,10 @@ copyFirst('tess/tesseract.min.js', ['tesseract.js/dist/tesseract.min.js']);
 copyFirst('tess/worker.min.js', ['tesseract.js/dist/worker.min.js']);
 for (const v of ['tesseract-core-lstm.wasm.js', 'tesseract-core-simd-lstm.wasm.js', 'tesseract-core-relaxedsimd-lstm.wasm.js'])
   { const f = nm('tesseract.js-core/' + v); if (fs.existsSync(f)) { fs.copyFileSync(f, path.join(lib, 'tess', 'core', v)); console.log('lib/tess/core/' + v); } else if (!/relaxed/.test(v)) { console.error('MISSING: ' + v); failed = true; } }
-copyFirst('tess/lang/eng.traineddata.gz', ['@tesseract.js-data/eng/4.0.0_best_int/eng.traineddata.gz', '@tesseract.js-data/eng/4.0.0/eng.traineddata.gz']);
+// stored unpacked: Android's build unpacks .gz files anyway, so every platform reads the same file
+{ const src = ['@tesseract.js-data/eng/4.0.0_best_int/eng.traineddata.gz', '@tesseract.js-data/eng/4.0.0/eng.traineddata.gz'].map(nm).find(f => fs.existsSync(f));
+  if (!src) { console.error('MISSING: English text data'); failed = true; }
+  else { fs.writeFileSync(path.join(lib, 'tess', 'lang', 'eng.traineddata'), require('zlib').gunzipSync(fs.readFileSync(src))); console.log('lib/tess/lang/eng.traineddata'); } }
 
 const fonts = {
   'young-serif': ['400'], fraunces: ['400', '600'], manrope: ['400', '500', '600', '700'], figtree: ['400', '500', '600', '700'], literata: ['400', '600', '400-italic'],
