@@ -22,8 +22,7 @@ copyFirst('pdf-lib.min.js', ['pdf-lib/dist/pdf-lib.min.js']);
 copyFirst('xlsx.full.min.js', ['xlsx/dist/xlsx.full.min.js']);
 copyFirst('mammoth.browser.min.js', ['mammoth/mammoth.browser.min.js', 'mammoth/mammoth.browser.js']);
 copyFirst('docx-preview.min.js', ['docx-preview/dist/docx-preview.min.js', 'docx-preview/dist/docx-preview.js']);
-// scanner: page finding (OpenCV) and text recognition (Tesseract, English built in)
-copyFirst('opencv.js', ['@techstark/opencv-js/dist/opencv.js']);
+// scanner: text recognition (Tesseract, English built in); page finding is part of the app itself
 fs.mkdirSync(path.join(lib, 'tess', 'core'), { recursive: true });
 fs.mkdirSync(path.join(lib, 'tess', 'lang'), { recursive: true });
 copyFirst('tess/tesseract.min.js', ['tesseract.js/dist/tesseract.min.js']);

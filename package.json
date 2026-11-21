@@ -30,7 +30,6 @@
     "@fontsource/noto-nastaliq-urdu": "^5.0.0",
     "@fontsource/source-serif-4": "^5.0.0",
     "@fontsource/young-serif": "^5.0.0",
-    "@techstark/opencv-js": "4.10.0-release.1",
     "@tesseract.js-data/eng": "^1.0.0",
     "docx-preview": "^0.3.0",
     "electron": "28.3.3",
