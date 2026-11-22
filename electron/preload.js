@@ -10,6 +10,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   downloadUpdate: () => ipcRenderer.invoke('update-download'),
   installUpdate: () => ipcRenderer.invoke('update-install'),
   onTabKey: cb => { ipcRenderer.removeAllListeners('tab-key'); ipcRenderer.on('tab-key', (_e, k) => cb(k)); },
+  dlSettings: () => ipcRenderer.invoke('dl-settings-get'),
+  setDlSettings: v => ipcRenderer.invoke('dl-settings-set', v),
   notifyUpdate: ver => ipcRenderer.invoke('notify-update', ver),
   onUpdateClicked: cb => { ipcRenderer.removeAllListeners('update-clicked'); ipcRenderer.on('update-clicked', (_e, v) => cb(v)); },
   onUpdateProgress: cb => { ipcRenderer.removeAllListeners('update-progress'); ipcRenderer.on('update-progress', (_e, p) => cb(p)); }

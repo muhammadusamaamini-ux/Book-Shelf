@@ -25,6 +25,7 @@ After the first install, the app tells you when a new version is out (a card on 
 - PDF tools: organise pages, merge, split, compress, watermark, page numbers, forms, pictures to PDF, PDF to Word, text or pictures, PDF to EPUB
 - Word, Excel and PowerPoint: view, present, and edit Word and Excel files
 - Opens files from **Open with** on Windows and Android
+- Windows: a “Received file” popup with an Open button when a PDF or Office file is downloaded (runs from the tray; can be turned off)
 - Optional sync between devices through a private GitHub repository
 
 ## How it is built

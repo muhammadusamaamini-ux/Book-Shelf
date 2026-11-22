@@ -3734,13 +3734,14 @@ function appMenu(){
     <button data-m="tools"><svg class="i"><use href="#i-file"/></svg><span>PDF tools<small>Merge PDFs, pictures to PDF</small></span></button>
     <button data-m="dict"><svg class="i"><use href="#i-search"/></svg><span>Dictionary<small>Works offline</small></span></button>
     <button data-m="look"><svg class="i"><use href="#i-eye"/></svg><span>Appearance<small>${({dark:'Dark',light:'Light',system:'Follows your device'})[LS.get('look','dark')]||'Dark'}</small></span></button>
+    ${BS.platform==='windows'&&window.electronAPI&&window.electronAPI.dlSettings?'<button data-m="dlpop"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 19h14"/></svg><span>Download popup<small>“Received file” when a PDF is downloaded</small></span></button>':''}
     <button data-m="keys"><svg class="i"><use href="#i-pen"/></svg><span>Keyboard shortcuts<small>See and change them</small></span></button>
     <button data-m="imp"><svg class="i"><use href="#i-mark"/></svg><span>Import from Shelfmark<small>Bring in highlights, notes, bookmarks and reading places</small></span></button>
     <button data-m="about"><svg class="i"><use href="#i-book"/></svg><span>About and credits</span></button>
    </div><div class="mact"><button class="btn" data-a="x">Close</button></div>`);
   b.onclick=e=>{const a=e.target.closest('[data-m],[data-a]');if(!a)return;const m=a.dataset.m;
     if(!m){closeSheet();return}
-    if(m==='look'){lookSheet();return}if(m==='keys'){keysSheet();return}if(m==='upd'){Upd.settings();return}else if(m==='imp'){closeSheet();importShelfmark()}else if(m==='sync')syncSheet();else if(m==='tools')shelfPdfTools();else if(m==='dict'){closeSheet();openDict();setTimeout(()=>$('#dictQ').focus(),60)}
+    if(m==='dlpop'){dlPopSheet();return}if(m==='look'){lookSheet();return}if(m==='keys'){keysSheet();return}if(m==='upd'){Upd.settings();return}else if(m==='imp'){closeSheet();importShelfmark()}else if(m==='sync')syncSheet();else if(m==='tools')shelfPdfTools();else if(m==='dict'){closeSheet();openDict();setTimeout(()=>$('#dictQ').focus(),60)}
     else if(m==='about')sheet(`<h2>About Book Shelf</h2><p class="muted">Your personal reader for PDF, EPUB, Word, Excel and PowerPoint files.</p><p class="muted" style="font-size:13px">Dictionary: Open English WordNet 2024 (CC BY 4.0), globalwordnet.github.io. PDF rendering: PDF.js. Editing: pdf-lib, SheetJS, mammoth, docx-preview, JSZip.</p><div class="mact"><button class="btn primary" data-a="x">OK</button></div>`).onclick=ev=>{if(ev.target.closest('[data-a]'))closeSheet()}};
 }
 
@@ -4304,6 +4305,18 @@ function applyLook(){
 }
 matchMedia('(prefers-color-scheme: light)').addEventListener('change',()=>{if(LS.get('look','dark')==='system')applyLook()});
 window.addEventListener('storage',e=>{if(e.key==='kg.look')applyLook()});
+
+/* ---------- Windows: the "Received file" popup for new downloads ---------- */
+async function dlPopSheet(){
+  let st={popup:true,startup:true};try{st=await window.electronAPI.dlSettings()}catch(e){}
+  const b=sheet(`<h2>Download popup</h2><p class="muted" style="margin:0">When a PDF, EPUB, Word, Excel or PowerPoint file finishes downloading into your Downloads folder, a small “Received file” box appears in the corner with an Open button.</p>
+    <label class="chk"><input type="checkbox" id="dlP" ${st.popup?'checked':''}><span>Show the popup when a file is downloaded</span></label>
+    <label class="chk"><input type="checkbox" id="dlS" ${st.startup?'checked':''} ${st.popup?'':'disabled'}><span>Start with Windows (in the tray, so it works before you open the app)</span></label>
+    <p class="muted" style="font-size:13px">While this is on, closing the window keeps Book Shelf in the tray. Right-click its tray icon to quit.</p>
+    <div class="mact"><button class="btn primary" data-a="x">Done</button></div>`);
+  b.onchange=async()=>{const v={popup:$('#dlP').checked,startup:$('#dlS').checked};$('#dlS').disabled=!v.popup;try{await window.electronAPI.setDlSettings(v)}catch(e){}};
+  b.onclick=e=>{if(e.target.closest('[data-a]'))closeSheet()};
+}
 function lookSheet(){
   const cur=LS.get('look','dark');
   const opt=(k,l,d)=>`<button data-lk="${k}" aria-pressed="${cur===k}">${cur===k?'<svg class="i" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>':'<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>'}<span>${l}<small>${d}</small></span></button>`;

@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const { pathToFileURL } = require('url');
 const { autoUpdater } = require('electron-updater');
+const downloads = require('./downloads');
 
 const WWW = path.join(__dirname, '..', 'www');
 const FILE_TYPES = /\.(pdf|epub|docx|xlsx|xls|pptx)$/i;
@@ -19,18 +20,22 @@ function filesFromArgs(argv) {
 }
 function queueFiles(list) {
   for (const f of list) if (!pending.includes(f)) pending.push(f);
-  if (win && list.length) {
-    if (win.isMinimized()) win.restore();
-    win.focus();
-    win.webContents.send('open-file');
-  }
+  if (!list.length) return;
+  if (!win || win.isDestroyed()) { if (app.isReady()) createWindow(); return; } // a new window takes the files when it starts
+  showMain();
+  win.webContents.send('open-file');
+}
+function showMain() {
+  if (!win || win.isDestroyed()) { createWindow(); return; }
+  if (win.isMinimized()) win.restore();
+  win.show(); win.focus();
 }
 
 if (process.platform === 'win32') app.setAppUserModelId('com.usama.bookshelf');
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
-  app.on('second-instance', (_e, argv) => queueFiles(filesFromArgs(argv)));
+  app.on('second-instance', (_e, argv) => { const f = filesFromArgs(argv); if (f.length) queueFiles(f); else showMain(); });
   queueFiles(filesFromArgs(process.argv.slice(1)));
   app.whenReady().then(() => {
     protocol.handle('app', req => {
@@ -41,6 +46,13 @@ if (!app.requestSingleInstanceLock()) {
       if (!file.startsWith(WWW)) return new Response('Not found', { status: 404 });
       return net.fetch(pathToFileURL(file).toString());
     });
+    downloads.init({
+      openFile: f => queueFiles([f]),
+      showMain,
+      onOff: () => { if (!win || win.isDestroyed() || !win.isVisible()) { app.isQuitting = true; app.quit(); } }
+    });
+    // started with Windows: stay in the tray until a download or a click needs the window
+    if (process.argv.includes('--hidden') && downloads.isOn() && !pending.length) return;
     createWindow();
   });
 }
@@ -66,8 +78,10 @@ function createWindow() {
     if (k === 'w' && !input.shift) { e.preventDefault(); win.webContents.send('tab-key', 'close'); }
   });
   win.loadURL('app://bookshelf/index.html');
+  downloads.keepInTray(win);
+  win.on('closed', () => { win = null; if (app.isQuitting || !downloads.isOn()) app.quit(); });
 }
-app.on('window-all-closed', () => app.quit());
+app.on('window-all-closed', () => { if (app.isQuitting || !downloads.isOn()) app.quit(); });
 
 ipcMain.handle('version', () => app.getVersion());
 ipcMain.handle('take-files', () => {
@@ -135,7 +149,7 @@ ipcMain.handle('notify-update', (_e, ver) => {
   if (!Notification.isSupported()) return false;
   const n = new Notification({ title: 'New update available', body: `Book Shelf ${ver} is ready to download. Click to see it.`, icon: path.join(__dirname, '..', 'assets', 'icon.png') });
   n.on('click', () => {
-    if (win) { if (win.isMinimized()) win.restore(); win.show(); win.focus(); win.webContents.send('update-clicked', ver); }
+    showMain(); if (win) win.webContents.send('update-clicked', ver);
   });
   n.show();
   lastNote = n; // keep a reference so the click still works later

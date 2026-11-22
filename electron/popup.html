@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
+<title>Received file</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#1B2232;color:#ECE6D8;font:14px "Segoe UI",system-ui,sans-serif;overflow:hidden;user-select:none;-webkit-user-select:none}
+  .box{height:100%;display:flex;flex-direction:column;gap:14px;padding:16px 18px 14px;border:1px solid #2E3547;border-radius:10px}
+  .top{display:flex;align-items:center}
+  .top h1{flex:1;margin:0;font-size:15px;font-weight:600}
+  .x{width:30px;height:30px;border:0;border-radius:6px;background:none;color:#A3ABBC;font-size:20px;line-height:1;cursor:pointer}
+  .x:hover{background:#2A3142;color:#ECE6D8}
+  .row{display:flex;align-items:center;gap:12px}
+  .ic{flex:none;width:44px;height:44px;border-radius:9px;display:grid;place-items:center;font-weight:800;font-size:12px;letter-spacing:.02em;color:#fff}
+  .name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:15px}
+  .open{flex:none;height:40px;padding:0 26px;border:0;border-radius:9px;background:#E0A84F;color:#1A1206;font:inherit;font-weight:700;font-size:15px;cursor:pointer}
+  .open:hover{background:#ECB963}
+  .open:focus-visible,.x:focus-visible{outline:2px solid #ECE6D8;outline-offset:2px}
+  label{display:flex;align-items:center;gap:10px;color:#C3C8D3;font-size:13.5px;cursor:pointer;width:max-content}
+  input{width:18px;height:18px;margin:0;accent-color:#E0A84F;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="box" id="box">
+  <div class="top"><h1>Received file</h1><button class="x" id="x" aria-label="Close">×</button></div>
+  <div class="row"><div class="ic" id="ic">PDF</div><div class="name" id="name" title=""></div><button class="open" id="open">Open</button></div>
+  <label><input type="checkbox" id="dont"> Don’t show this message again</label>
+</div>
+<script>
+  const COL={pdf:'#D93A2B',epub:'#3E8E5E',docx:'#2B5FB8',xlsx:'#1F7A47',xls:'#1F7A47',pptx:'#C4532A'};
+  window.popup.onFile(f=>{
+    const n=document.getElementById('name');n.textContent=f.name;n.title=f.name;
+    const ic=document.getElementById('ic');ic.textContent=(f.ext||'pdf').toUpperCase().slice(0,4);ic.style.background=COL[f.ext]||'#D93A2B';
+    document.getElementById('dont').checked=false;
+  });
+  document.getElementById('open').onclick=()=>window.popup.open();
+  document.getElementById('x').onclick=()=>window.popup.close(document.getElementById('dont').checked);
+  document.getElementById('dont').onchange=e=>{if(e.target.checked)window.popup.close(true)};
+  const box=document.getElementById('box');box.onmouseenter=()=>window.popup.hold(true);box.onmouseleave=()=>window.popup.hold(false);
+  addEventListener('keydown',e=>{if(e.key==='Escape')window.popup.close(false)});
+</script>
+</body>
+</html>
